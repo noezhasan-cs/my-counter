@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عدادي الاحترافي</title>
+    <style>
+        /* إعدادات الخلفية والخطوط */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* خلفية متدرجة */
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        /* حاوية العداد (البطاقة البيضاء) */
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px); /* تأثير الزجاج الضبابي */
+            padding: 50px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+            width: 300px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        /* شكل الرقم */
+        .counter {
+            font-size: 120px;
+            font-weight: 800;
+            margin: 20px 0;
+            text-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease;
+        }
+
+        /* شكل زر الزيادة */
+        .add-btn {
+            background-color: #00d2ff;
+            background-image: linear-gradient(to right, #00d2ff 0%, #3a7bd5 51%, #00d2ff 100%);
+            border: none;
+            color: white;
+            padding: 20px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+            transition: 0.5s;
+            background-size: 200% auto;
+            width: 100%;
+        }
+
+        .add-btn:hover {
+            background-position: right center; /* تحريك التدرج عند التمرير */
+            transform: scale(1.05);
+        }
+
+        .add-btn:active {
+            transform: scale(0.95); /* تأثير الضغطة */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>إحصائياتي الشخصية</h1>
+        <div class="counter" id="number">0</div>
+        <button class="add-btn" onclick="increase()">إضافة +</button>
+    </div>
+
+    <script>
+        // البحث عن الرقم المحفوظ في ذاكرة المتصفح
+        let savedCount = localStorage.getItem("myCounterValue");
+        let count = savedCount ? parseInt(savedCount) : 0;
+
+        // عرض الرقم المحفوظ فوراً
+        const numberDisplay = document.getElementById("number");
+        numberDisplay.innerText = count;
+
+        function increase() {
+            count = count + 1;
+            
+            // تحديث الشاشة مع حركة خفيفة
+            numberDisplay.innerText = count;
+            numberDisplay.style.transform = "scale(1.1)";
+            setTimeout(() => { numberDisplay.style.transform = "scale(1)"; }, 100);
+
+            // حفظ القيمة الجديدة في الذاكرة
+            localStorage.setItem("myCounterValue", count);
+        }
+    </script>
+</body>
+</html>
