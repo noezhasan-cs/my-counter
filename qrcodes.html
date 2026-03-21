@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مكتبة دروس الطلاب</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #1a1a2e; color: white; text-align: center; padding: 30px; }
+        .grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 30px; }
+        .qr-card { background: white; padding: 15px; border-radius: 15px; color: #333; width: 160px; transition: 0.3s; cursor: pointer; }
+        .back { margin-top: 40px; display: inline-block; color: white; text-decoration: none; border: 1px solid white; padding: 10px 20px; border-radius: 50px; }
+    </style>
+</head>
+<body>
+    <h1>مكتبة الدروس المرفوعة 📚</h1>
+    <div id="qrGrid" class="grid">جاري تحميل الدروس من السحاب...</div>
+    <a href="index.html" class="back">⬅ العودة للرئيسية</a>
+
+    <script>
+        const firebaseConfig = {
+            databaseURL: "https://myschoolproject-fdf5c-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // مراقبة البيانات لحظياً
+        db.ref('lessons').on('value', (snapshot) => {
+            const data = snapshot.val();
+            const grid = document.getElementById('qrGrid');
+            grid.innerHTML = ""; 
+
+            if (!data) {
+                grid.innerHTML = "<p>لا توجد دروس حالياً.</p>";
+                return;
+            }
+
+            for (let id in data) {
+                const item = data[id];
+                const card = document.createElement('div');
+                card.className = 'qr-card';
+                card.innerHTML = `<p style="font-weight:bold">${item.name}</p><div id="qr-${id}"></div>`;
+                card.onclick = () => window.open(item.url, '_blank');
+                grid.appendChild(card);
+
+                new QRCode(document.getElementById(`qr-${id}`), {
+                    text: item.url,
+                    width: 150,
+                    height: 150
+                });
+            }
+        });
+    </script>
+</body>
+</html>

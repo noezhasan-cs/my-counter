@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المنصة التعليمية السحابية</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            width: 350px;
+        }
+
+        h1 { color: #00d2ff; margin-bottom: 5px; }
+        p { opacity: 0.7; margin-bottom: 30px; font-size: 0.9rem; }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 15px;
+            margin: 15px 0;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 15px;
+            transition: 0.3s;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .btn-student { background: linear-gradient(135deg, #2193b0, #6dd5ed); }
+        .btn-counter { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .btn-admin { background: #34495e; border: 1px solid rgba(255,255,255,0.2); }
+
+        .btn:hover {
+            transform: translateY(-5px);
+            filter: brightness(1.1);
+        }
+
+        .admin-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-card">
+        <h1>منصة حسن التعليمية 🚀</h1>
+        <p>مرحباً بك.. اختر وجهتك المفضلة</p>
+
+        <a href="qrcodes.html" class="btn btn-student">
+            <span>📚</span> دروس الطلاب (الباركودات)
+        </a>
+
+        <a href="counter.html" class="btn btn-counter">
+            <span>🔢</span> العداد الشخصي
+        </a>
+
+        <div class="admin-section">
+            <button onclick="enterAdmin()" class="btn btn-admin">
+                <span>⚙️</span> لوحة الإدارة (للمعلمين فقط)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function enterAdmin() {
+            // كلمة المرور الافتراضية، يمكنك تغييرها لأي شيء تريده
+            const pass = prompt("الرجاء إدخال كلمة مرور المعلم للدخول:");
+            
+            if (pass === "1234") {
+                window.location.href = "admin.html";
+            } else if (pass !== null) {
+                alert("كلمة المرور خاطئة! هذه المنطقة مخصصة للمصرح لهم فقط.");
+            }
+        }
+    </script>
+
+</body>
+</html>
