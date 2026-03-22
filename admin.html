@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة الإدارة الاحترافية - منصة حسن</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: white; text-align: center; padding: 50px; }
+        .admin-box { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 40px; border-radius: 25px; display: inline-block; width: 350px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #38bdf8; margin-bottom: 25px; }
+        input { padding: 15px; width: 90%; border-radius: 12px; border: 1px solid #334155; margin-bottom: 20px; background: #1e293b; color: white; font-size: 1rem; outline: none; }
+        input:focus { border-color: #38bdf8; }
+        button { padding: 15px; background: #0284c7; color: white; border: none; border-radius: 12px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; transition: 0.3s; }
+        button:hover { background: #0ea5e9; transform: translateY(-2px); }
+        .status-msg { margin-top: 15px; font-size: 0.9rem; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <h1>إضافة محتوى سحابي ☁️</h1>
+    
+    <div class="admin-box">
+        <input type="text" id="urlInput" placeholder="ضع رابط الدرس هنا...">
+        <input type="text" id="nameInput" placeholder="عنوان الدرس (مثلاً: درس البرمجة)">
+        <button onclick="confirmAndSave()">إرسال للسحاب الآن ✅</button>
+        <div id="status" class="status-msg">جاهز للاستلام...</div>
+        <a href="index.html" style="display: block; margin-top: 20px; color: #94a3b8; text-decoration: none; font-size: 0.9rem;">
+    ⬅ العودة للصفحة الرئيسية
+        </a>
+    </div>
+
+    <script>
+        // 1. إعدادات الربط (تأكد من الرابط الخاص بك)
+        const firebaseConfig = {
+            databaseURL: "https://myschoolproject-fdf5c-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+
+        // 2. تشغيل Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+
+        // 3. دالة الحفظ مع رسالة التأكيد
+        function confirmAndSave() {
+            const url = document.getElementById('urlInput').value.trim();
+            const name = document.getElementById('nameInput').value.trim();
+            const status = document.getElementById('status');
+
+            if (url === "" || name === "") {
+                alert("يا حسن، الخانات فاضية! عبي البيانات أولاً.");
+                return;
+            }
+
+            // رسالة التأكيد التي طلبتها
+            const isSure = confirm("هل أنت متأكد من إرسال هذا الدرس للسحاب؟");
+            
+            if (isSure) {
+                status.innerText = "جاري الاتصال بالسحاب... ⏳";
+                
+                db.ref('lessons').push({
+                    url: url,
+                    name: name,
+                    timestamp: Date.now()
+                })
+                .then(() => {
+                    alert("تم الإرسال بنجاح! الموقع صار شغال 100%");
+                    status.innerText = "✅ تمت العملية بنجاح";
+                    document.getElementById('urlInput').value = "";
+                    document.getElementById('nameInput').value = "";
+                })
+                .catch((error) => {
+                    alert("خطأ تقني: " + error.message);
+                    status.innerText = "❌ فشل الإرسال";
+                    console.error("Firebase Error:", error);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
