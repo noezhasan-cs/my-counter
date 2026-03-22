@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة الإدارة السريعة</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { background: #0f172a; color: white; text-align: center; font-family: sans-serif; padding-top: 50px; }
+        .box { background: #1e293b; padding: 30px; border-radius: 20px; display: inline-block; width: 320px; border: 1px solid #334155; }
+        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; }
+        button { width: 100%; padding: 12px; background: #38bdf8; border: none; border-radius: 8px; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:disabled { background: #64748b; cursor: not-allowed; }
+        #status { margin-top: 15px; font-size: 0.85rem; color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h3>إضافة درس جديد ☁️</h3>
+        <input type="text" id="urlInput" placeholder="رابط اليوتيوب...">
+        <input type="text" id="nameInput" placeholder="اسم الدرس...">
+        <button id="sendBtn" onclick="confirmAndSave()">إرسال للسحاب ✅</button>
+        <div id="status">جاهز...</div>
+        <a href="index.html" style="display:block; margin-top:15px; color:#64748b; text-decoration:none; font-size:0.8rem;">العودة للرئيسية</a>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://myschoolproject-fdf5c-default-rtdb.europe-west1.firebasedatabase.app/" };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        function confirmAndSave() {
+            const url = document.getElementById('urlInput').value.trim();
+            const name = document.getElementById('nameInput').value.trim();
+            const status = document.getElementById('status');
+            const btn = document.getElementById('sendBtn');
+
+            if (!url || !name) { alert("عبي البيانات يا حسن!"); return; }
+            if (!confirm("تأكيد الإرسال؟")) return;
+
+            // تفعيل حالة التحميل وتعطيل الزر لمنع التكرار
+            btn.disabled = true;
+            status.innerText = "جاري المحاولة... (سيتم الإلغاء إذا طال الوقت)";
+
+            // نظام الحماية من الانتظار الطويل (Timeout)
+            const timeout = setTimeout(() => {
+                btn.disabled = false;
+                status.innerText = "❌ يبدو أن هناك مشكلة بالاتصال، حاول مرة أخرى.";
+                alert("السيرفر تأخر بالرد، جرب تحديث الصفحة أو تغيير الشبكة.");
+            }, 15000); // 15 ثانية فقط بدل 5 دقائق!
+
+            db.ref('lessons').push({ url, name, time: Date.now() }, (error) => {
+                clearTimeout(timeout); // إلغاء عداد الوقت بمجرد وصول الرد
+                btn.disabled = false;
+                if (error) {
+                    status.innerText = "❌ فشل: " + error.message;
+                } else {
+                    status.innerText = "✅ تم بنجاح وسرعة!";
+                    document.getElementById('urlInput').value = "";
+                    document.getElementById('nameInput').value = "";
+                    alert("تم الحفظ في السحاب!");
+                }
+            });
+        }
+    </script>
+</body>
+</html>
