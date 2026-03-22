@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مكتبة الدروس الذكية</title>
+    <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <style>
+        body { background:#0f172a; color:white; text-align:center; font-family:sans-serif; margin:0; padding:20px; }
+        #qrGrid { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; padding:20px; }
+        .card { background:white; padding:15px; border-radius:15px; color:black; width:160px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .back-btn { display:inline-block; margin-top:30px; color:#94a3b8; text-decoration:none; border:1px solid #334155; padding:10px 20px; border-radius:50px; }
+    </style>
+</head>
+<body>
+    <h1>دروس الطلاب المرفوعة 📚</h1>
+    <div id="qrGrid">جاري التحميل... 🚀</div>
+    <a href="index.html" class="back-btn">⬅ العودة للرئيسية</a>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://myschoolproject-fdf5c-default-rtdb.europe-west1.firebasedatabase.app/" };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        // 1. محاولة تحميل البيانات من الذاكرة المحلية فوراً (لسرعة البرق)
+        const cached = localStorage.getItem('lessons_cache');
+        if (cached) {
+            renderData(JSON.parse(cached));
+        }
+
+        // 2. الاتصال بـ Firebase لجلب أي تحديث جديد وتخزينه
+        db.ref('lessons').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                // حفظ النسخة الجديدة في الذاكرة
+                localStorage.setItem('lessons_cache', JSON.stringify(data));
+                renderData(data);
+            } else {
+                document.getElementById('qrGrid').innerHTML = "لا توجد دروس حالياً.";
+            }
+        });
+
+        function renderData(data) {
+            const grid = document.getElementById('qrGrid');
+            grid.innerHTML = "";
+            for (let id in data) {
+                let container = document.createElement('div');
+                container.className = "card";
+                container.innerHTML = `<div id="qr-${id}"></div><p style="margin-top:10px; font-weight:bold;">${data[id].name}</p>`;
+                grid.appendChild(container);
+                new QRCode(document.getElementById(`qr-${id}`), { text: data[id].url, width: 130, height: 130 });
+            }
+        }
+    </script>
+</body>
+</html>
