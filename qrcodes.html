@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مكتبة الدروس الذكية</title>
+    <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
+</head>
+<body style="background:#0f172a; color:white; text-align:center; font-family:sans-serif;">
+    <h1>دروس الطلاب المرفوعة 📚</h1>
+    <div id="qrGrid" style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; padding:20px;">جاري تحميل البيانات...</div>
+
+    <script>
+        const dbUrl = "https://myschoolproject-fdf5c-default-rtdb.europe-west1.firebasedatabase.app/lessons.json";
+
+        async function loadData() {
+            try {
+                const response = await fetch(dbUrl);
+                const data = await response.json();
+                const grid = document.getElementById('qrGrid');
+                grid.innerHTML = "";
+
+                if (!data) {
+                    grid.innerHTML = "لا توجد دروس حالياً.";
+                    return;
+                }
+
+                for (let id in data) {
+                    let container = document.createElement('div');
+                    container.style.cssText = "background:white; padding:15px; border-radius:15px; color:black; width:160px;";
+                    container.innerHTML = `<div id="qr-${id}"></div><p style="margin-top:10px; font-weight:bold;">${data[id].name}</p>`;
+                    grid.appendChild(container);
+                    
+                    new QRCode(document.getElementById(`qr-${id}`), {
+                        text: data[id].url,
+                        width: 130,
+                        height: 130
+                    });
+                }
+            } catch (error) {
+                document.getElementById('qrGrid').innerHTML = "حدث خطأ في الاتصال بالسحاب.";
+                console.error(error);
+            }
+        }
+
+        // تشغيل الجلب فور فتح الصفحة
+        loadData();
+    </script>
+</body>
+</html>
