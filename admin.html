@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة الإدارة - سوبابيس</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #0f172a; color: white; text-align: center; font-family: sans-serif; padding-top: 50px; }
+        .box { background: #1e293b; padding: 30px; border-radius: 20px; display: inline-block; width: 320px; border: 1px solid #334155; }
+        input { width: 94%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; outline: none; }
+        button { width: 100%; padding: 12px; background: #38bdf8; border: none; border-radius: 8px; color: #0f172a; font-weight: bold; cursor: pointer; }
+        button:disabled { background: #64748b; }
+        #status { margin-top: 15px; color: #94a3b8; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h3>إضافة درس جديد 🚀</h3>
+        <input type="text" id="nameInput" placeholder="عنوان الدرس...">
+        <input type="text" id="urlInput" placeholder="رابط الدرس...">
+        <button id="sendBtn" onclick="saveData()">إرسال للسحاب ✅</button>
+        <div id="status">جاهز...</div>
+        <a href="index.html" style="display:block; margin-top:15px; color:#64748b; text-decoration:none; font-size:0.8rem;">العودة للرئيسية</a>
+    </div>
+
+    <script>
+        // استبدل القيم من Settings -> API في Supabase
+        const S_URL = 'https://fxefxyobcrbkfdtemej.supabase.co';
+        const S_KEY = 'ضغ_هنا_مفتاح_الـ_anon_الخاص_بك'; 
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
+        async function saveData() {
+            const url = document.getElementById('urlInput').value.trim();
+            const name = document.getElementById('nameInput').value.trim();
+            const btn = document.getElementById('sendBtn');
+            const status = document.getElementById('status');
+
+            if(!url || !name) { alert("عبي البيانات!"); return; }
+
+            btn.disabled = true;
+            status.innerText = "جاري الحفظ...";
+
+            const { error } = await _supabase.from('lessons').insert([{ name, url }]);
+
+            btn.disabled = false;
+            if (error) {
+                status.innerText = "❌ خطأ: " + error.message;
+                console.error(error);
+            } else {
+                status.innerText = "✅ تم الحفظ بنجاح!";
+                document.getElementById('urlInput').value = "";
+                document.getElementById('nameInput').value = "";
+            }
+        }
+    </script>
+</body>
+</html>
