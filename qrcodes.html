@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>عرض دروس الطلاب - QR</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        body { background: #0f172a; color: white; text-align: center; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        h1 { color: #38bdf8; margin-bottom: 10px; }
+        p.subtitle { color: #94a3b8; margin-bottom: 30px; }
+        
+        #qrGrid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px; }
+        
+        /* تصميم البطاقة كـ رابط قابل للضغط */
+        .card { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 15px; 
+            color: #0f172a; 
+            width: 160px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4); 
+            text-decoration: none; /* إزالة خط الرابط */
+            display: block; 
+            transition: 0.3s transform ease;
+            cursor: pointer;
+        }
+        
+        .card:hover { transform: translateY(-8px); background: #f8fafc; }
+        
+        .card p { margin-top: 12px; font-weight: bold; font-size: 0.9rem; color: #1e293b; }
+        canvas { width: 130px; height: 130px; display: block; margin: 0 auto; }
+        
+        /* تصميم زر العودة */
+        .back-btn { 
+            display: inline-block; 
+            margin-top: 40px; 
+            padding: 10px 25px; 
+            background: #1e293b; 
+            color: #38bdf8; 
+            text-decoration: none; 
+            border-radius: 8px; 
+            border: 1px solid #38bdf8;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .back-btn:hover { background: #38bdf8; color: #0f172a; }
+
+        .error-box { background: rgba(239, 68, 68, 0.1); color: #f87171; padding: 15px; border-radius: 10px; display: inline-block; border: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+    <h1>الدروس المتاحة للطلاب 📚</h1>
+    <p class="subtitle">يمكنك مسح الباركود بالكاميرا أو الضغط عليه مباشرة</p>
+    
+    <div id="qrGrid">جاري الاتصال بالسحاب... ⏳</div>
+
+    <a href="index.html" class="back-btn">⬅ العودة للصفحة الرئيسية</a>
+
+    <script>
+        const S_URL = 'https://dkvywsnztqyxcfliqldw.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrdnl3c256dHF5eGNmbGlwbGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzg5MTksImV4cCI6MjA4OTkxNDkxOX0.0A31WY3QrAl_o376rJSZ9t9aYyWRbyjSMShq6vAOOdk';
+        
+        const _supabase = supabase.createClient(S_URL, S_KEY, {
+            auth: { persistSession: false }
+        });
+
+        async function fetchLessons() {
+            try {
+                const { data, error } = await _supabase
+                    .from('lessons')
+                    .select('*')
+                    .order('id', { ascending: false });
+
+                if (error) throw error;
+
+                const grid = document.getElementById('qrGrid');
+                grid.innerHTML = "";
+
+                if (!data || data.length === 0) {
+                    grid.innerHTML = "<p>لا توجد دروس مرفوعة حالياً.</p>";
+                    return;
+                }
+
+                data.forEach(lesson => {
+                    if (!lesson.url) return;
+
+                    // إنشاء البطاقة كـ رابط (a tag)
+                    const card = document.createElement('a');
+                    card.className = "card";
+                    card.href = lesson.url;
+                    card.target = "_blank"; // يفتح في صفحة جديدة
+                    
+                    const canvas = document.createElement('canvas');
+                    const p = document.createElement('p');
+                    p.innerText = lesson.name;
+
+                    card.appendChild(canvas);
+                    card.appendChild(p);
+                    grid.appendChild(card);
+
+                    new QRious({
+                        element: canvas,
+                        value: lesson.url,
+                        size: 200
+                    });
+                });
+            } catch (err) {
+                console.error("Fetch Error:", err);
+                document.getElementById('qrGrid').innerHTML = `
+                    <div class="error-box">
+                        <b>عذراً، فشل تحديث البيانات</b><br>
+                        <button onclick="location.reload()" style="background:#ef4444; color:white; border:none; padding:5px 15px; border-radius:5px; margin-top:10px; cursor:pointer;">إعادة محاولة</button>
+                    </div>`;
+            }
+        }
+
+        fetchLessons();
+        // تحديث كل 15 ثانية للتأكد من المزامنة
+        setInterval(fetchLessons, 15000);
+    </script>
+</body>
+</html>
