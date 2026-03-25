@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إدارة الدروس المرفوعة 📝</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; position: relative; }
+        h2 { color: #38bdf8; text-align: center; margin-bottom: 30px; }
+        
+        /* زر العودة على اليسار */
+        .back-btn { position: absolute; top: 0; left: 0; color: #94a3b8; text-decoration: none; padding: 8px 15px; border: 1px solid #334155; border-radius: 8px; transition: 0.3s; font-size: 0.9rem; }
+        .back-btn:hover { color: #38bdf8; border-color: #38bdf8; background: #1e293b; }
+
+        /* منطقة الفلاتر */
+        .filters { display: flex; gap: 15px; justify-content: center; margin-bottom: 25px; background: #1e293b; padding: 15px; border-radius: 15px; border: 1px solid #334155; }
+        select { padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; cursor: pointer; min-width: 150px; }
+
+        /* الجدول */
+        table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #334155; }
+        th { background: #334155; color: #38bdf8; font-size: 0.9rem; }
+        tr:hover { background: #243146; }
+
+        .btn-group { display: flex; gap: 5px; }
+        .btn { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: 0.2s; }
+        .edit-btn { background: #38bdf8; color: #0f172a; }
+        .delete-btn { background: #ef4444; color: white; }
+        .btn:hover { opacity: 0.8; transform: translateY(-1px); }
+
+        /* النافذة المنبثقة (Modal) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }
+        .modal-content { background: #1e293b; margin: 5% auto; padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; border: 2px solid #38bdf8; position: relative; text-align: right; }
+        .modal-content label { display: block; margin-top: 10px; color: #94a3b8; font-size: 0.85rem; }
+        .modal-content input, .modal-content select { width: 100%; padding: 12px; margin: 5px 0 15px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+        .save-btn { width: 100%; background: #10b981; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+
+        .loading { text-align: center; margin-top: 50px; color: #38bdf8; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="lessons-hub.html" class="back-btn">⬅ عودة للمركز</a>
+    <h2>إدارة وحذف الدروس 📝</h2>
+    
+    <div class="filters">
+        <select id="filterClass" onchange="loadLessons()">
+            <option value="all">كل الصفوف</option>
+            <option value="الأول">الأول الابتدائي</option><option value="الثاني">الثاني الابتدائي</option>
+            <option value="الثالث">الثالث الابتدائي</option><option value="الرابع">الرابع الابتدائي</option>
+            <option value="الخامس">الخامس الابتدائي</option><option value="السادس">السادس الابتدائي</option>
+            <option value="السابع">السابع الأساسي</option><option value="الثامن">الثامن الأساسي</option>
+            <option value="التاسع">التاسع الأساسي</option><option value="العاشر">العاشر</option>
+        </select>
+        
+        <select id="filterSubject" onchange="loadLessons()">
+            <option value="all">كل المواد</option>
+            <option value="الرياضيات">الرياضيات</option><option value="الفيزياء">الفيزياء</option>
+            <option value="الكيمياء">الكيمياء</option><option value="الأحياء">الأحياء</option>
+            <option value="اللغة العربية">اللغة العربية</option><option value="علوم الحاسوب">علوم الحاسوب</option>
+        </select>
+    </div>
+
+    <div id="loading" class="loading">جاري جلب الدروس... ⏳</div>
+    
+    <table id="lessonsTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>اسم الدرس</th>
+                <th>الصف</th>
+                <th>المادة</th>
+                <th>إجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="lessonsBody"></tbody>
+    </table>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span style="float:left; cursor:pointer; color:#f87171; font-weight:bold;" onclick="closeModal()">✖</span>
+        <h3 style="color:#38bdf8; margin-top:0;">تعديل بيانات الدرس</h3>
+        <hr style="border:0; border-top:1px solid #334155; margin-bottom:20px;">
+        
+        <input type="hidden" id="editId">
+        
+        <label>اسم الدرس:</label>
+        <input type="text" id="editName">
+        
+        <label>الرابط (URL):</label>
+        <input type="url" id="editUrl">
+        
+        <label>الصف:</label>
+        <select id="editClass">
+            <option value="الأول">الأول الابتدائي</option>
+            <option value="الثاني">الثاني الابتدائي</option>
+            <option value="الثالث">الثالث الابتدائي</option>
+            <option value="الرابع">الرابع الابتدائي</option>
+            <option value="الخامس">الخامس الابتدائي</option>
+            <option value="السادس">السادس الابتدائي</option>
+            <option value="السابع">السابع الأساسي</option>
+            <option value="الثامن">الثامن الأساسي</option>
+            <option value="التاسع">التاسع الأساسي</option>
+            <option value="العاشر">العاشر</option>
+        </select>
+        
+        <label>المادة:</label>
+        <select id="editSubject">
+            <option value="الرياضيات">الرياضيات</option>
+            <option value="الفيزياء">الفيزياء</option>
+            <option value="الكيمياء">الكيمياء</option>
+            <option value="الأحياء">الأحياء</option>
+            <option value="اللغة العربية">اللغة العربية</option>
+            <option value="علوم الحاسوب">علوم الحاسوب</option>
+        </select>
+        
+        <button class="save-btn" onclick="submitEdit()">حفظ التعديلات ✅</button>
+    </div>
+</div>
+
+<script>
+    const S_URL = 'https://dkvywsnztqyxcflipldw.supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrdnl3c256dHF5eGNmbGlwbGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzg5MTksImV4cCI6MjA4OTkxNDkxOX0.0A31WY3QrAl_o376rJSZ9t9aYyWRbyjSMShq6vAOOdk';
+    const _supabase = supabase.createClient(S_URL, S_KEY);
+
+   async function loadLessons() {
+        const filterC = document.getElementById('filterClass').value;
+        const filterS = document.getElementById('filterSubject').value;
+        const body = document.getElementById('lessonsBody');
+        const table = document.getElementById('lessonsTable');
+        const loading = document.getElementById('loading');
+
+        // 1. إظهار مؤشر التحميل وإخفاء الجدول مؤقتاً
+        loading.style.display = 'block';
+        loading.innerText = "جاري البحث... ⏳";
+        table.style.display = 'none';
+        body.innerHTML = ""; // تفريغ الجدول تماماً من أي بيانات قديمة
+
+        try {
+            let query = _supabase.from('lessons').select('*').order('id', { ascending: false });
+            
+            if (filterC !== 'all') query = query.eq('class_name', filterC);
+            if (filterS !== 'all') query = query.eq('subject_name', filterS);
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            // 2. التحقق: هل توجد بيانات؟
+            if (!data || data.length === 0) {
+                loading.innerHTML = `
+                    <div style="background: rgba(56, 189, 248, 0.1); padding: 20px; border-radius: 15px; border: 1px dashed #38bdf8;">
+                        <p style="color: #94a3b8; margin: 0;">عذراً، لا توجد دروس مرفوعة لـ</p>
+                        <b style="color: #38bdf8;">${filterC === 'all' ? 'كل الصفوف' : filterC} - ${filterS === 'all' ? 'كل المواد' : filterS}</b>
+                    </div>`;
+                return; // التوقف هنا وعدم إظهار الجدول
+            }
+
+            // 3. إذا وجدت بيانات، قم برسم الجدول
+            data.forEach(lesson => {
+                body.innerHTML += `
+                    <tr>
+                        <td><b>${lesson.name}</b></td>
+                        <td><span style="color:#94a3b8">${lesson.class_name}</span></td>
+                        <td><span style="color:#38bdf8">${lesson.subject_name}</span></td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn edit-btn" onclick='openEditModal(${JSON.stringify(lesson)})'>تعديل</button>
+                                <button class="btn delete-btn" onclick="deleteLesson(${lesson.id})">حذف</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            loading.style.display = 'none';
+            table.style.display = 'table';
+        } catch (err) { 
+            loading.innerText = "خطأ في الاتصال: " + err.message;
+            loading.style.color = "#ef4444";
+        }
+    }
+
+    function openEditModal(lesson) {
+        document.getElementById('editId').value = lesson.id;
+        document.getElementById('editName').value = lesson.name;
+        document.getElementById('editUrl').value = lesson.url;
+        document.getElementById('editClass').value = lesson.class_name;
+        document.getElementById('editSubject').value = lesson.subject_name;
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+
+    async function submitEdit() {
+        const id = document.getElementById('editId').value;
+        const updates = {
+            name: document.getElementById('editName').value,
+            url: document.getElementById('editUrl').value,
+            class_name: document.getElementById('editClass').value,
+            subject_name: document.getElementById('editSubject').value
+        };
+
+        try {
+            const { error } = await _supabase.from('lessons').update(updates).eq('id', id);
+            if (error) throw error;
+            alert("✅ تم التحديث بنجاح");
+            closeModal();
+            loadLessons();
+        } catch (err) { alert("فشل التحديث: " + err.message); }
+    }
+
+    async function deleteLesson(id) {
+        if (!confirm("⚠️ هل أنت متأكد من حذف هذا الدرس نهائياً؟")) return;
+        const { error } = await _supabase.from('lessons').delete().eq('id', id);
+        if (!error) loadLessons();
+    }
+
+    // إغلاق المودال عند الضغط خارج المحتوى
+    window.onclick = function(event) {
+        let modal = document.getElementById('editModal');
+        if (event.target == modal) closeModal();
+    }
+
+    loadLessons();
+</script>
+</body>
+</html>
