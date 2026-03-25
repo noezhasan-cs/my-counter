@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إدارة الدروس المرفوعة 📝</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h2 { color: #38bdf8; text-align: center; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; border-radius: 15px; overflow: hidden; }
+        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #334155; }
+        th { background: #334155; color: #38bdf8; }
+        tr:hover { background: #243146; }
+
+        .delete-btn { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .delete-btn:hover { background: #dc2626; }
+
+        .loading { text-align: center; font-size: 1.2rem; margin-top: 50px; }
+        .back-btn { display: inline-block; margin-bottom: 20px; color: #94a3b8; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="lessons-hub.html" class="back-btn">⬅ عودة للمركز</a>
+    <h2>قائمة الدروس الحالية 📋</h2>
+    
+    <div id="loading" class="loading">جاري جلب الدروس... ⏳</div>
+    
+    <table id="lessonsTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>اسم الدرس</th>
+                <th>الصف</th>
+                <th>المادة</th>
+                <th>إجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="lessonsBody">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    const S_URL = 'https://dkvywsnztqyxcflipldw.supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrdnl3c256dHF5eGNmbGlwbGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzg5MTksImV4cCI6MjA4OTkxNDkxOX0.0A31WY3QrAl_o376rJSZ9t9aYyWRbyjSMShq6vAOOdk';
+    const _supabase = supabase.createClient(S_URL, S_KEY);
+
+    async function loadLessons() {
+        try {
+            const { data, error } = await _supabase
+                .from('lessons')
+                .select('*')
+                .order('id', { ascending: false });
+
+            if (error) throw error;
+
+            const body = document.getElementById('lessonsBody');
+            body.innerHTML = "";
+            
+            data.forEach(lesson => {
+                const row = `
+                    <tr>
+                        <td>${lesson.name}</td>
+                        <td>${lesson.class_name || 'غير محدد'}</td>
+                        <td>${lesson.subject_name || 'غير محدد'}</td>
+                        <td>
+                            <button class="delete-btn" onclick="deleteLesson(${lesson.id})">حذف 🗑️</button>
+                        </td>
+                    </tr>
+                `;
+                body.innerHTML += row;
+            });
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('lessonsTable').style.display = 'table';
+
+        } catch (err) {
+            alert("خطأ في جلب البيانات: " + err.message);
+        }
+    }
+
+    async function deleteLesson(id) {
+        if (!confirm("هل أنت متأكد من حذف هذا الدرس نهائياً؟")) return;
+
+        try {
+            const { error } = await _supabase
+                .from('lessons')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            alert("تم الحذف بنجاح!");
+            loadLessons(); // إعادة تحميل الجدول
+
+        } catch (err) {
+            alert("فشل الحذف: " + err.message);
+        }
+    }
+
+    loadLessons();
+</script>
+</body>
+</html>
