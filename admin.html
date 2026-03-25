@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إدارة المحتوى التعليمي ⚙️</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; }
+        .admin-box { background: #1e293b; padding: 30px; border-radius: 20px; max-width: 500px; margin: 0 auto; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { color: #38bdf8; margin-bottom: 20px; }
+        
+        .form-group { text-align: right; margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 0.9rem; }
+        
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; font-size: 1rem; }
+        input:focus, select:focus { border-color: #38bdf8; outline: none; }
+
+        .btn-upload { width: 100%; padding: 15px; background: #38bdf8; color: #0f172a; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 10px; transition: 0.3s; }
+        .btn-upload:hover { background: #7dd3fc; transform: translateY(-2px); }
+        
+        .back-link { display: inline-block; margin-top: 20px; color: #94a3b8; text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { color: #38bdf8; }
+        
+        #status { margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-box">
+        <h2>إضافة درس جديد 📚</h2>
+        
+        <div class="form-group">
+            <label>اسم الدرس:</label>
+            <input type="text" id="lessonName" placeholder="مثلاً: درس المصفوفات">
+        </div>
+
+        <div class="form-group">
+            <label>رابط الدرس (URL):</label>
+            <input type="url" id="lessonUrl" placeholder="https://example.com/lesson">
+        </div>
+
+        <div class="form-group">
+            <label>اختيار الصف:</label>
+            <select id="className">
+                <option value="الأول">الأول الابتدائي</option>
+                <option value="الثاني">الثاني الابتدائي</option>
+                <option value="الثالث">الثالث الابتدائي</option>
+                <option value="الرابع">الرابع الابتدائي</option>
+                <option value="الخامس">الخامس الابتدائي</option>
+                <option value="السادس">السادس الابتدائي</option>
+                <option value="السابع">السابع الأساسي</option>
+                <option value="الثامن">الثامن الأساسي</option>
+                <option value="التاسع">التاسع الأساسي</option>
+                <option value="العاشر">العاشر</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>اختيار المادة:</label>
+            <select id="subjectName">
+                <option value="الرياضيات">الرياضيات</option>
+                <option value="الفيزياء">الفيزياء</option>
+                <option value="الكيمياء">الكيمياء</option>
+                <option value="الأحياء">الأحياء</option>
+                <option value="اللغة العربية">اللغة العربية</option>
+                <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+                <option value="التاريخ">التاريخ</option>
+                <option value="الجغرافيا">الجغرافيا</option>
+                <option value="التربية الوطنية">التربية الوطنية</option>
+                <option value="العلوم العامة">العلوم العامة</option>
+                <option value="علوم الحاسوب">علوم الحاسوب</option>
+                <option value="التربية الإسلامية">التربية الإسلامية</option>
+                <option value="الثقافة المالية">الثقافة المالية</option>
+                <option value="الفن والمهني">الفن والمهني</option>
+            </select>
+        </div>
+
+        <button class="btn-upload" onclick="uploadLesson()">رفع الدرس للسحابة 🚀</button>
+        <div id="status"></div>
+    </div>
+
+    <a href="lessons-hub.html" class="back-link">⬅ عودة للمركز</a>
+
+    <script>
+        const S_URL = 'https://dkvywsnztqyxcflipldw.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrdnl3c256dHF5eGNmbGlwbGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzg5MTksImV4cCI6MjA4OTkxNDkxOX0.0A31WY3QrAl_o376rJSZ9t9aYyWRbyjSMShq6vAOOdk';
+        
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
+        async function uploadLesson() {
+            const name = document.getElementById('lessonName').value;
+            const url = document.getElementById('lessonUrl').value;
+            const className = document.getElementById('className').value;
+            const subjectName = document.getElementById('subjectName').value;
+            const status = document.getElementById('status');
+
+            if (!name || !url) {
+                status.innerText = "⚠️ يرجى تعبئة جميع الحقول!";
+                status.style.color = "#f87171";
+                return;
+            }
+
+            status.innerText = "جاري الرفع... ⏳";
+            status.style.color = "#38bdf8";
+
+            try {
+                const { error } = await _supabase
+                    .from('lessons')
+                    .insert([{ 
+                        name, 
+                        url, 
+                        class_name: className, 
+                        subject_name: subjectName 
+                    }]);
+
+                if (error) throw error;
+
+                status.innerText = "✅ تم رفع الدرس بنجاح!";
+                status.style.color = "#10b981";
+                document.getElementById('lessonName').value = "";
+                document.getElementById('lessonUrl').value = "";
+
+            } catch (err) {
+                status.innerText = "❌ خطأ في الرفع: " + err.message;
+                status.style.color = "#f87171";
+            }
+        }
+    </script>
+</body>
+</html>
