@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض دروس الطلاب - QR المطور</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        :root { --primary: #38bdf8; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; margin: 0; }
+        
+        h1 { color: var(--primary); margin-bottom: 5px; font-size: 1.8rem; }
+        p.subtitle { color: #94a3b8; margin-bottom: 25px; font-size: 0.9rem; }
+
+        /* منطقة الفلاتر */
+        .filter-section { 
+            background: var(--card-bg); padding: 15px; border-radius: 20px; 
+            border: 1px solid #334155; max-width: 800px; margin: 0 auto 30px auto; 
+            display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; 
+        }
+        select { padding: 10px; border-radius: 10px; border: 1px solid #334155; background: var(--bg); color: white; cursor: pointer; outline: none; min-width: 160px; }
+        select:focus { border-color: var(--primary); }
+
+        /* شبكة الدروس */
+        #qrGrid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        
+        /* البطاقة المحدثة */
+        .card { 
+            background: white; padding: 15px; border-radius: 15px; 
+            color: #0f172a; width: 160px; box-shadow: 0 10px 20px rgba(0,0,0,0.4); 
+            text-decoration: none; transition: 0.3s; cursor: pointer; position: relative;
+        }
+        .card:hover { transform: translateY(-8px); }
+        .card p { margin: 10px 0 0 0; font-weight: bold; font-size: 0.85rem; color: #1e293b; line-height: 1.2; }
+        .card .tag { font-size: 0.7rem; color: var(--primary); background: #f0f9ff; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 5px; border: 1px solid #e0f2fe; }
+        canvas { width: 130px; height: 130px; display: block; margin: 0 auto; }
+
+        /* زر العودة الذكي (تصميم كودك القديم) */
+        .back-btn { 
+            display: inline-block; margin-top: 40px; padding: 10px 25px; 
+            background: #1e293b; color: var(--primary); text-decoration: none; 
+            border-radius: 8px; border: 1px solid var(--primary); font-weight: bold; transition: 0.3s;
+        }
+        .back-btn:hover { background: var(--primary); color: #0f172a; }
+
+        .error-box { background: rgba(239, 68, 68, 0.1); color: #f87171; padding: 15px; border-radius: 10px; border: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+    <h1>الدروس المتاحة للطلاب 📚</h1>
+    <p class="subtitle">اختر الصف والمادة لعرض دروسك (اضغط على الكود للفتح المباشر)</p>
+    
+    <div class="filter-section">
+        <select id="studentClass" onchange="fetchLessons()">
+            <option value="all">كل الصفوف</option>
+            <option value="الأول">الأول الابتدائي</option><option value="الثاني">الثاني الابتدائي</option>
+            <option value="الثالث">الثالث الابتدائي</option><option value="الرابع">الرابع الابتدائي</option>
+            <option value="الخامس">الخامس الابتدائي</option><option value="السادس">السادس الابتدائي</option>
+            <option value="السابع">السابع الأساسي</option><option value="الثامن">الثامن الأساسي</option>
+            <option value="التاسع">التاسع الأساسي</option><option value="العاشر">العاشر</option>
+        </select>
+        
+        <select id="studentSubject" onchange="fetchLessons()">
+            <option value="all">كل المواد</option>
+            <option value="الرياضيات">الرياضيات</option><option value="الفيزياء">الفيزياء</option>
+            <option value="الكيمياء">الكيمياء</option><option value="الأحياء">الأحياء</option>
+            <option value="اللغة العربية">اللغة العربية</option><option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+            <option value="علوم الحاسوب">علوم الحاسوب</option>
+        </select>
+    </div>
+
+    <div id="qrGrid">جاري الاتصال بالسحاب... ⏳</div>
+
+    <div id="backButtonContainer"></div>
+
+    <script>
+        const S_URL = 'https://dkvywsnztqyxcflipldw.supabase.co'; 
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrdnl3c256dHF5eGNmbGlwbGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzg5MTksImV4cCI6MjA4OTkxNDkxOX0.0A31WY3QrAl_o376rJSZ9t9aYyWRbyjSMShq6vAOOdk';
+        
+        const _supabase = supabase.createClient(S_URL, S_KEY, { auth: { persistSession: false } });
+
+        // حفظ "منطق زر العودة الذكي" من كودك القديم
+        const backContainer = document.getElementById('backButtonContainer');
+        const role = sessionStorage.getItem('userRole');
+
+        if (role === 'teacher') {
+            backContainer.innerHTML = `<a href="student-access-v99-k2p8z5.html?mode=teacher" class="back-btn">⬅ العودة لصفحة الطالب (إدارة)</a>`;
+        } else {
+            backContainer.innerHTML = `<a href="student-access-v99-k2p8z5.html" class="back-btn">⬅ العودة للرئيسية</a>`;
+        }
+
+        async function fetchLessons() {
+            const classVal = document.getElementById('studentClass').value;
+            const subjectVal = document.getElementById('studentSubject').value;
+            const grid = document.getElementById('qrGrid');
+
+            try {
+                let query = _supabase.from('lessons').select('*').order('id', { ascending: false });
+                
+                // تطبيق الفلاتر
+                if (classVal !== 'all') query = query.eq('class_name', classVal);
+                if (subjectVal !== 'all') query = query.eq('subject_name', subjectVal);
+
+                const { data, error } = await query;
+                if (error) throw error;
+
+                grid.innerHTML = "";
+
+                if (!data || data.length === 0) {
+                    grid.innerHTML = "<p style='color:#94a3b8; margin-top:20px;'>عذراً، لا توجد دروس مرفوعة لهذا الاختيار حالياً.</p>";
+                    return;
+                }
+
+                data.forEach(lesson => {
+                    if (!lesson.url) return;
+
+                    const card = document.createElement('a');
+                    card.className = "card";
+                    card.href = lesson.url;
+                    card.target = "_blank"; 
+                    
+                    const canvas = document.createElement('canvas');
+                    const p = document.createElement('p');
+                    p.innerText = lesson.name;
+                    
+                    // إضافة المادة تحت الاسم بشكل صغير
+                    const tag = document.createElement('span');
+                    tag.className = "tag";
+                    tag.innerText = lesson.subject_name;
+
+                    card.appendChild(canvas);
+                    card.appendChild(p);
+                    card.appendChild(tag);
+                    grid.appendChild(card);
+
+                    // استخدام مكتبة QRious كما في كودك القديم
+                    new QRious({
+                        element: canvas,
+                        value: lesson.url,
+                        size: 200
+                    });
+                });
+            } catch (err) {
+                grid.innerHTML = `<div class="error-box"><b>فشل تحديث البيانات</b><br><small>${err.message}</small></div>`;
+            }
+        }
+
+        fetchLessons();
+        // تحديث تلقائي كل 30 ثانية (زدنا الوقت قليلاً لتجنب الضغط على السيرفر أثناء اختيار الفلاتر)
+        setInterval(fetchLessons, 30000);
+    </script>
+</body>
+</html>
