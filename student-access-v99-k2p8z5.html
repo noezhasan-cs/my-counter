@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الطلاب التعليمية 🎓</title>
+    <style>
+        body { background: #0f172a; color: white; text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; justify-content: center; height: 100vh; overflow: hidden; }
+        h1 { color: #38bdf8; font-size: 2.5rem; margin-bottom: 5px; }
+        .subtitle { color: #94a3b8; margin-bottom: 40px; font-size: 1.1rem; }
+        
+        /* أيقونة الألعاب */
+        .game-trigger { position: absolute; top: 20px; left: 20px; font-size: 1.5rem; cursor: pointer; background: #1e293b; padding: 10px; border-radius: 50%; border: 1px solid #334155; transition: 0.3s; z-index: 10; }
+        
+        /* أزرار المعلم السرية (مخفية تلقائياً) */
+        .teacher-controls { display: none; position: absolute; top: 80px; left: 15px; flex-direction: column; gap: 10px; z-index: 20; }
+        .admin-btn { padding: 8px 15px; background: #0f172a; border: 1px solid #38bdf8; color: #38bdf8; border-radius: 8px; cursor: pointer; font-size: 0.8rem; text-decoration: none; transition: 0.3s; }
+        .admin-btn:hover { background: #38bdf8; color: #0f172a; }
+        
+        #exitPreview { display: none; margin-top: 20px; background: #f87171; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        /* لوحة الألعاب */
+        #gamePanel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e293b; padding: 30px; border-radius: 25px; border: 2px solid #38bdf8; box-shadow: 0 0 50px rgba(0,0,0,0.8); z-index: 100; width: 280px; }
+        .close-btn { position: absolute; top: 10px; right: 15px; cursor: pointer; color: #f87171; font-size: 1.2rem; }
+        .game-btn { display: block; width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; color: #38bdf8; border: 1px solid #334155; border-radius: 10px; text-decoration: none; font-weight: bold; transition: 0.3s; }
+
+        /* حاوية الأزرار */
+        .container { display: flex; justify-content: center; padding: 20px; }
+        .nav-card { background: #1e293b; border: 2px solid #334155; border-radius: 25px; padding: 40px 30px; width: 250px; text-decoration: none; color: white; transition: 0.4s; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+        .nav-card:hover { border-color: #38bdf8; transform: scale(1.05); }
+        .icon { font-size: 4rem; display: block; margin-bottom: 20px; }
+        .title { color: #38bdf8; font-weight: bold; font-size: 1.5rem; display: block; }
+    </style>
+</head>
+<body id="mainBody">
+
+    <div class="game-trigger" onclick="toggleGames()">🎮</div>
+
+    <div class="teacher-controls" id="teacherUI">
+        <a href="teacher-portal-77x-s5r30nh134.html" class="admin-btn">🏠 العودة للرئيسية</a>
+        <button onclick="startPreview()" class="admin-btn">👁️ منظور الطالب</button>
+    </div>
+
+    <div id="gamePanel">
+        <span class="close-btn" onclick="toggleGames()">✖</span>
+        <h3 style="color: #38bdf8; margin-top: 0;">ألعاب الاستراحة 🕹️</h3>
+        <a href="counter.html" class="game-btn">🔢 لعبة العداد</a>
+        <div class="game-btn" style="opacity: 0.4; cursor: not-allowed;">🐍 لعبة الحية (قريباً)</div>
+    </div>
+
+    <div id="contentArea">
+        <h1>أهلاً بك يا بطل! 🎓</h1>
+        <p class="subtitle">جاهز لدرس اليوم؟ اختر ما تريد القيام به:</p>
+
+        <div class="container">
+            <a href="qrcodes.html" class="nav-card">
+                <span class="icon">🔍</span>
+                <span class="title">عرض دروسي</span>
+            </a>
+        </div>
+    </div>
+
+    <button id="exitPreview" onclick="stopPreview()">✖ إنهاء منظور الطالب</button>
+
+    <script>
+        // التحقق من الرابط: هل المعلم هو من يفتح الصفحة؟
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('mode') === 'teacher') {
+            document.getElementById('teacherUI').style.display = 'flex';
+        }
+
+        function toggleGames() {
+            const panel = document.getElementById('gamePanel');
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function startPreview() {
+            document.getElementById('teacherUI').style.display = 'none';
+            document.getElementById('exitPreview').style.display = 'inline-block';
+            alert("أنت الآن تشاهد الصفحة كما يراها الطالب تماماً.");
+        }
+
+        function stopPreview() {
+            document.getElementById('teacherUI').style.display = 'flex';
+            document.getElementById('exitPreview').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
