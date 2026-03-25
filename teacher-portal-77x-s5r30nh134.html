@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة المعلم - الإدارة</title>
+    <style>
+        body { background: #0f172a; color: white; text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; justify-content: center; height: 100vh; overflow: hidden; }
+        h1 { color: #38bdf8; font-size: 2.2rem; margin-bottom: 5px; }
+        .subtitle { color: #94a3b8; margin-bottom: 30px; }
+        
+        .game-trigger { position: absolute; top: 20px; left: 20px; font-size: 1.5rem; cursor: pointer; background: #1e293b; padding: 10px; border-radius: 50%; border: 1px solid #334155; transition: 0.3s; z-index: 10; }
+        .game-trigger:hover { transform: rotate(20deg) scale(1.1); border-color: #38bdf8; }
+
+        #gamePanel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e293b; padding: 30px; border-radius: 25px; border: 2px solid #38bdf8; box-shadow: 0 0 50px rgba(0,0,0,0.8); z-index: 100; width: 280px; }
+        .close-btn { position: absolute; top: 10px; right: 15px; cursor: pointer; color: #f87171; font-size: 1.2rem; }
+        .game-btn { display: block; width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; color: #38bdf8; border: 1px solid #334155; border-radius: 10px; text-decoration: none; font-weight: bold; transition: 0.3s; }
+        .game-btn:hover { background: #38bdf8; color: #0f172a; }
+
+        .container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+        .nav-card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 20px; width: 200px; text-decoration: none; color: white; transition: 0.3s; }
+        .nav-card:hover { border-color: #38bdf8; transform: translateY(-5px); }
+        .icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+        .title { color: #38bdf8; font-weight: bold; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+    <div class="game-trigger" onclick="toggleGames()" title="أدوات المعلم">🎮</div>
+
+    <div id="gamePanel">
+        <span class="close-btn" onclick="toggleGames()">✖</span>
+        <h3 style="color: #38bdf8; margin-top: 0;">العاب سريعة 🛠️</h3>
+        <a href="counter.html" class="game-btn">🔢 فتح العداد</a>
+    </div>
+
+    <h1>لوحة تحكم المعلم 👨‍🏫</h1>
+    <p class="subtitle">إدارة المحتوى والوصول السريع</p>
+
+    <div class="container">
+        <a href="admin.html" class="nav-card">
+            <span class="icon">⚙️</span>
+            <span class="title">إدارة المحتوى</span>
+        </a>
+
+        <a href="student-access-v99-k2p8z5.html?mode=teacher" class="nav-card">
+            <span class="icon">📖</span>
+            <span class="title">دخول الطلاب</span>
+        </a>
+    </div>
+
+    <script>
+        function toggleGames() {
+            const panel = document.getElementById('gamePanel');
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+        // حفظ دور المعلم عند دخول هذه الصفحة
+        sessionStorage.setItem('userRole', 'teacher');
+    </script>
+</body>
+</html>
