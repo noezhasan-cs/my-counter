@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الطلاب 🎓</title>
+    <style>
+        body { background: #0f172a; color: white; text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; justify-content: center; height: 100vh; overflow: hidden; }
+        h1 { color: #38bdf8; font-size: 2.5rem; }
+        .game-trigger { position: absolute; top: 20px; left: 20px; font-size: 1.5rem; cursor: pointer; background: #1e293b; padding: 10px; border-radius: 50%; border: 1px solid #334155; z-index: 10; }
+        
+        /* لوحة تحكم المعلم */
+        .teacher-ui { display: none; position: absolute; top: 80px; left: 15px; flex-direction: column; gap: 8px; z-index: 20; }
+        .admin-btn { padding: 8px 12px; background: #1e293b; border: 1px solid #38bdf8; color: #38bdf8; border-radius: 8px; cursor: pointer; font-size: 0.8rem; text-decoration: none; font-weight: bold; }
+        .admin-btn.exit { background: #ef4444; border-color: #ef4444; color: white; display: none; }
+
+        #gamePanel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e293b; padding: 30px; border-radius: 25px; border: 2px solid #38bdf8; z-index: 100; width: 280px; }
+        .game-btn { display: block; width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; color: #38bdf8; border: 1px solid #334155; border-radius: 10px; text-decoration: none; font-weight: bold; }
+        .container { display: flex; justify-content: center; padding: 20px; }
+        .nav-card { background: #1e293b; border: 2px solid #334155; border-radius: 25px; padding: 40px; width: 250px; text-decoration: none; color: white; transition: 0.3s; }
+        .nav-card:hover { border-color: #38bdf8; transform: scale(1.05); }
+        .icon { font-size: 4rem; display: block; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="game-trigger" onclick="toggleGames()">🎮</div>
+
+    <div class="teacher-ui" id="teacherBox">
+        <a href="teacher-portal-77x-s5r30nh134.html" id="backHome" class="admin-btn">🏠 الرئيسية</a>
+        <button onclick="startPreview()" id="previewBtn" class="admin-btn">👁️ منظور الطالب</button>
+        <button onclick="stopPreview()" id="exitPreviewBtn" class="admin-btn exit">✖ إنهاء المنظور</button>
+    </div>
+
+
+    <div id="mainContent">
+        <h1>أهلاً بك يا بطل! 🎓</h1>
+        <div class="container">
+            <a href="qrcodes.html" class="nav-card">
+                <span class="icon">🔍</span>
+                <span style="font-size:1.5rem; font-weight:bold; color:#38bdf8;">عرض دروسي</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mode') === 'teacher') sessionStorage.setItem('userRole', 'teacher');
+
+        if (sessionStorage.getItem('userRole') === 'teacher') {
+            document.getElementById('teacherBox').style.display = 'flex';
+        }
+
+        function startPreview() {
+            document.getElementById('backHome').style.display = 'none';
+            document.getElementById('previewBtn').style.display = 'none';
+            document.getElementById('exitPreviewBtn').style.display = 'block';
+        }
+
+        function stopPreview() {
+            document.getElementById('backHome').style.display = 'block';
+            document.getElementById('previewBtn').style.display = 'block';
+            document.getElementById('exitPreviewBtn').style.display = 'none';
+        }
+
+        function toggleGames() {
+            const p = document.getElementById('gamePanel');
+            p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+        }
+    </script>
+</body>
+</html>
