@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مكتبة الدروس التفاعلية 📖</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; padding: 20px; margin: 0; }
+        
+        .header-section { margin-bottom: 30px; margin-top: 20px; }
+        h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 10px; }
+        
+        .filters { display: flex; gap: 12px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; padding: 0 10px; }
+        select { 
+            padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; 
+            background: white; min-width: 160px; font-weight: 500; outline: none;
+            transition: 0.3s;
+        }
+        select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+
+        #qrGrid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+            gap: 25px; max-width: 1100px; margin: 0 auto; padding: 10px;
+        }
+
+        .card { 
+            background: white; padding: 20px; border-radius: 20px; 
+            transition: all 0.3s ease; border: 1px solid #e2e8f0; 
+            cursor: pointer; position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .card:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: 0 15px 25px rgba(37, 99, 235, 0.1); }
+        
+        .card p { margin: 15px 0 0; font-weight: bold; font-size: 1rem; color: var(--text); }
+        .subj-tag { 
+            font-size: 0.75rem; color: var(--primary); background: #eff6ff; 
+            padding: 4px 10px; border-radius: 20px; font-weight: 600;
+        }
+
+        canvas { width: 150px !important; height: 150px !important; margin: 15px auto 0; display: block; border-radius: 12px; }
+        
+        .loading { grid-column: 1 / -1; margin-top: 60px; color: var(--primary); font-size: 1.2rem; }
+
+        .nav-buttons { margin-top: 40px; display: flex; gap: 15px; justify-content: center; }
+        .back-btn { 
+            padding: 12px 25px; border-radius: 12px; text-decoration: none; 
+            font-weight: 600; transition: 0.3s; border: 1px solid #e2e8f0; background: white; color: #64748b;
+        }
+        .back-btn:hover { background: #f1f5f9; color: var(--text); }
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <h1>دروسي التفاعلية 🎓</h1>
+        <p id="classHeader">جاري جلب بيانات الصف...</p>
+    </div>
+    
+    <div class="filters">
+        <select id="studentSubject" onchange="fetchLessons()">
+    <option value="all">📚 كل المواد</option>
+    <option value="الرياضيات">الرياضيات</option>
+    <option value="الفيزياء">الفيزياء</option>
+    <option value="الكيمياء">الكيمياء</option>
+    <option value="الأحياء">الأحياء</option>
+    <option value="علوم الأرض">علوم الأرض</option>
+    <option value="اللغة العربية">اللغة العربية</option>
+    <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+    <option value="التربية الإسلامية">التربية الإسلامية</option>
+    <option value="الدراسات الاجتماعية">الدراسات الاجتماعية</option>
+    <option value="الحاسوب">الحاسوب</option>
+    <option value="الثقافة المالية">الثقافة المالية</option>
+    <option value="المهني">التربية المهنية</option>
+</select>
+    </div>
+
+    <div id="qrGrid"><div class="loading">⏳ جاري تحميل المكتبة...</div></div>
+
+    <div class="nav-buttons" id="navContainer"></div>
+
+    <script>
+        const S_URL = 'https://dkvywsnztqyxcflipldw.supabase.co'; 
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrdnl3c256dHF5eGNmbGlwbGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzg5MTksImV4cCI6MjA4OTkxNDkxOX0.0A31WY3QrAl_o376rJSZ9t9aYyWRbyjSMShq6vAOOdk'; 
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
+        // جلب البيانات من الرابط ومن التخزين المحلي
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role');
+        const selectedClass = localStorage.getItem('selectedClass') || "السابع";
+
+        document.getElementById('classHeader').innerText = `عرض دروس الصف ${selectedClass}`;
+
+        async function fetchLessons() {
+            const subjectVal = document.getElementById('studentSubject').value;
+            const grid = document.getElementById('qrGrid');
+            
+            grid.innerHTML = '<div class="loading">🔍 جاري البحث...</div>';
+
+            try {
+                let query = _supabase.from('lessons').select('*').eq('class_name', selectedClass).order('id', { ascending: false });
+                if (subjectVal !== 'all') query = query.eq('subject_name', subjectVal);
+
+                const { data, error } = await query;
+                if (error) throw error;
+
+                grid.innerHTML = "";
+                if (!data || data.length === 0) { 
+                    grid.innerHTML = '<p style="color: #64748b; margin-top:40px; grid-column: 1/-1;">لا توجد دروس مرفوعة لهذا الصف حالياً.</p>'; 
+                    return; 
+                }
+
+                data.forEach(lesson => {
+                    // الربط بصفحة العرض الجديدة view-lesson.html وتمرير الـ role
+                    let viewPageUrl = `view-lesson.html?id=${lesson.id}`;
+                    if (role === 'admin') viewPageUrl += `&role=admin`;
+
+                    const card = document.createElement('div');
+                    card.className = "card";
+                    // نستخدم window.location.href للفتح في نفس الصفحة لضمان تجربة مستخدم أفضل
+                    card.onclick = () => window.location.href = viewPageUrl;
+                    
+                    card.innerHTML = `
+                        <div style="text-align:right"><span class="subj-tag">${lesson.subject_name}</span></div>
+                        <canvas id="qr-${lesson.id}"></canvas>
+                        <p>${lesson.name}</p>
+                    `;
+                    grid.appendChild(card);
+
+                    // توليد الـ QR Code
+                    new QRious({ 
+                        element: document.getElementById(`qr-${lesson.id}`), 
+                        value: window.location.origin + window.location.pathname.replace('qrcodes.html', viewPageUrl), 
+                        size: 300,
+                        level: 'H' // جودة عالية للطباعة
+                    });
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        // إعداد أزرار التنقل
+        const nav = document.getElementById('navContainer');
+        // الزر الأساسي يرجع لصفحة اختيار الصفوف (مع الحفاظ على الـ role)
+        let backUrl = (role === 'admin') ? 'select-class.html?role=admin' : 'select-class.html';
+        nav.innerHTML = `<a href="${backUrl}" class="back-btn">⬅ العودة لاختيار الصف</a>`;
+
+        fetchLessons();
+    </script>
+</body>
+</html>

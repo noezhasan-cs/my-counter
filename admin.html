@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة محتوى تعليمي ➕</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --primary: #0284c7; --bg: #ffffff; --card-bg: #f8fafc; --border: #e2e8f0; }
+        body { background: var(--bg); color: #1e293b; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; text-align: center; }
+        
+        .admin-container { max-width: 550px; margin: 40px auto; background: var(--card-bg); padding: 35px; border-radius: 30px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        
+        /* التبويبات (Tabs) */
+        .tabs { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: none; font-weight: 800; color: #64748b; transition: 0.3s; font-size: 1rem; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+
+        input, select, textarea { width: 100%; padding: 14px; margin: 12px 0; border: 1px solid var(--border); border-radius: 15px; box-sizing: border-box; font-family: inherit; font-size: 0.95rem; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1); }
+        
+        .hidden { display: none; }
+        
+        button#submitBtn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 1.1rem; transition: 0.3s; }
+        button#submitBtn:hover { background: #0369a1; transform: translateY(-2px); }
+        button#submitBtn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        .back-nav { position: absolute; top: 25px; left: 25px; }
+        .back-link { padding: 10px 20px; background: var(--card-bg); border: 1px solid var(--border); color: #64748b; text-decoration: none; border-radius: 12px; font-size: 0.85rem; font-weight: bold; transition: 0.3s; }
+        .back-link:hover { background: white; color: var(--primary); border-color: var(--primary); }
+
+        .section-title { color: var(--primary); font-weight: 800; margin-bottom: 25px; font-size: 1.5rem; transition: 0.3s; }
+    </style>
+</head>
+<body>
+
+    <div class="back-nav"><a href="lessons-hub.html" class="back-link">⬅ عودة للمركز</a></div>
+
+    <div class="admin-container">
+        <div id="dynamicTitle" class="section-title">إضافة رابط خارجي 🔗</div>
+
+        <div class="tabs">
+            <div class="tab-btn active" onclick="switchTab('url', 'إضافة رابط خارجي 🔗')">رابط</div>
+            <div class="tab-btn" onclick="switchTab('file', 'رفع ملف من الجهاز ✉️')">ملف / فيديو</div>
+            <div class="tab-btn" onclick="switchTab('text', 'إضافة نص أو شرح 📑')">نص مباشر</div>
+        </div>
+
+        <input type="text" id="lessonName" placeholder="اسم الدرس (مثال: شرح الجهاز الهضمي)">
+        
+        <select id="lessonClass">
+            <option value="" disabled selected>اختر الصف المستهدف</option>
+            <option value="السابع">الصف السابع</option>
+            <option value="الثامن">الصف الثامن</option>
+            <option value="التاسع">الصف التاسع</option>
+            <option value="العاشر">الصف العاشر</option>
+        </select>
+
+        <select id="lessonSubject">
+            <option value="" disabled selected>اختر المادة التعليمية</option>
+            <optgroup label="المواد الأساسية">
+                <option value="اللغة العربية">اللغة العربية</option>
+                <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+                <option value="الرياضيات">الرياضيات</option>
+            </optgroup>
+            <optgroup label="الدراسات الاجتماعية والتربية">
+                <option value="التربية الإسلامية">التربية الإسلامية</option>
+                <option value="التاريخ">التاريخ</option>
+                <option value="الجغرافيا">الجغرافيا</option>
+                <option value="التربية الوطنية">التربية الوطنية</option>
+            </optgroup>
+            <optgroup label="العلوم">
+                <option value="العلوم">العلوم العامة (سابع/ثامن)</option>
+                <option value="الفيزياء">الفيزياء</option>
+                <option value="الكيمياء">الكيمياء</option>
+                <option value="الأحياء">الأحياء</option>
+                <option value="علوم الأرض">علوم الأرض والبيئة</option>
+            </optgroup>
+            <optgroup label="المواد التقنية والمهنية">
+                <option value="الحاسوب">تكنولوجيا المعلومات (الحاسوب)</option>
+                <option value="الثقافة المالية">الثقافة المالية</option>
+                <option value="التربية المهنية">التربية المهنية</option>
+            </optgroup>
+        </select>
+
+        <div id="urlSection">
+            <input type="url" id="lessonUrl" placeholder="أدخل الرابط الخارجي">
+        </div>
+
+        <div id="fileSection" class="hidden">
+            <input type="file" id="lessonFile" accept="image/*, .pdf, video/*, audio/*">
+            <p style="font-size: 0.8rem; color: #64748b; margin-top: -5px;">
+                (يدعم: الصور، الملفات، الفيديوهات، والمقاطع الصوتية MP3/WAV)
+            </p>
+        </div>
+
+        <div id="textSection" class="hidden">
+            <textarea id="lessonText" rows="6" placeholder="اكتب الملاحظات أو نص الدرس هنا..."></textarea>
+        </div>
+
+        <button id="submitBtn" onclick="saveToSupabase()">حفظ وإضافة الآن ✨</button>
+    </div>
+
+    <script>
+        const S_URL = 'https://dkvywsnztqyxcflipldw.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrdnl3c256dHF5eGNmbGlwbGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzg5MTksImV4cCI6MjA4OTkxNDkxOX0.0A31WY3QrAl_o376rJSZ9t9aYyWRbyjSMShq6vAOOdk';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
+        let currentTab = 'url';
+
+        function switchTab(type, titleText) {
+            currentTab = type;
+            document.getElementById('dynamicTitle').innerText = titleText;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('urlSection').classList.add('hidden');
+            document.getElementById('fileSection').classList.add('hidden');
+            document.getElementById('textSection').classList.add('hidden');
+            document.getElementById(type + 'Section').classList.remove('hidden');
+        }
+
+        async function saveToSupabase() {
+            const btn = document.getElementById('submitBtn');
+            const name = document.getElementById('lessonName').value;
+            const className = document.getElementById('lessonClass').value;
+            const subject = document.getElementById('lessonSubject').value;
+
+            if (!name || !className || !subject) return alert("يرجى إكمال البيانات الأساسية أولاً");
+
+            btn.disabled = true;
+            btn.innerText = "جاري الحفظ والرفع... ⏳";
+
+            // تم تعديل المسميات هنا لتطابق صورة جدولك (Lesson_text)
+            let finalData = { 
+                name: name, 
+                class_name: className, 
+                subject_name: subject, 
+                content_type: currentTab,
+                url: null,
+                Lesson_text: null,
+                file_url: null
+            };
+
+           // داخل دالة الحفظ الرئيسية في صفحة الأدمين
+            const submitBtn = document.getElementById('submitBtn'); // تأكد من وجود ID لزر الإضافة
+            
+            try {
+                // تغيير حالة الزر للسرعة
+                submitBtn.disabled = true;
+                submitBtn.innerText = "جاري الرفع... 🚀";
+
+                if (currentTab === 'url') {
+                    finalData.url = document.getElementById('lessonUrl').value;
+                    if (!finalData.url) throw new Error("يرجى وضع الرابط");
+                } 
+                else if (currentTab === 'text') {
+                    finalData.Lesson_text = document.getElementById('lessonText').value;
+                    if (!finalData.Lesson_text) throw new Error("يرجى كتابة النص");
+                } 
+                else if (currentTab === 'file') {
+                    const fileInput = document.getElementById('lessonFile');
+                    const file = fileInput.files[0];
+                    if (!file) throw new Error("يرجى اختيار ملف أو فيديو");
+
+                    // حل مشكلة الأسماء العربية بالكامل
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = Date.now() + "." + fileExt;
+
+                    const { error: uploadError } = await _supabase.storage
+                        .from('NewBucket')
+                        .upload(fileName, file);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: publicUrlData } = _supabase.storage
+                        .from('NewBucket')
+                        .getPublicUrl(fileName);
+                    
+                    finalData.file_url = publicUrlData.publicUrl;
+                }
+
+                // الحفظ النهائي في الجدول
+                const { error } = await _supabase.from('lessons').insert([finalData]);
+                if (error) throw error;
+
+                alert("تمت الإضافة بنجاح! 🎉");
+                location.reload();
+
+            } catch (err) {
+                alert("حدث خطأ: " + err.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "إضافة الدرس";
+            }
+        }
+    </script>
+</body>
+</html>
