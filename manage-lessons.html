@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المحتوى التعليمي ⚙️</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --primary: #0284c7; --bg: #ffffff; --card-bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; }
+        .container { max-width: 1200px; margin: 0 auto; position: relative; }
+        
+        h2 { color: var(--primary); text-align: center; font-weight: 800; margin-bottom: 20px; font-size: 1.5rem; }
+
+        /* تعديل التنقل العلوي للموبايل */
+        .top-nav { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            flex-wrap: wrap; 
+            gap: 15px;
+        }
+        
+        .filters { 
+            display: flex; 
+            gap: 10px; 
+            background: var(--card-bg); 
+            padding: 10px; 
+            border-radius: 15px; 
+            border: 1px solid var(--border);
+            flex-grow: 1;
+            justify-content: center;
+        }
+        select { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); outline: none; cursor: pointer; background: white; font-family: inherit; font-size: 0.85rem; }
+
+        .back-link { padding: 10px 15px; background: var(--card-bg); border: 1px solid var(--border); color: #64748b; text-decoration: none; border-radius: 12px; font-weight: bold; transition: 0.3s; font-size: 0.8rem; white-space: nowrap; }
+        .back-link:hover { border-color: var(--primary); color: var(--primary); background: white; }
+
+        /* --- حل مشكلة الجدول في الهاتف --- */
+        .table-container { 
+            background: white; 
+            border-radius: 20px; 
+            border: 1px solid var(--border); 
+            overflow-x: auto; /* يسمح بالتمرير الأفقي في الموبايل */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            -webkit-overflow-scrolling: touch;
+        }
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 600px; /* يضمن عدم انضغاط الأعمدة بشكل قبيح */ }
+        th { background: #f1f5f9; padding: 12px; color: var(--primary); font-weight: 800; border-bottom: 2px solid var(--border); font-size: 0.9rem; white-space: nowrap; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        
+        .badge { background: #f1f5f9; padding: 4px 8px; border-radius: 8px; font-size: 0.75rem; color: #475569; display: inline-block; white-space: nowrap; }
+        .badge-subject { background: #e0f2fe; color: #0369a1; }
+        
+        tr:hover { background: #f8fafc; }
+
+        .btn-group { display: flex; gap: 5px; flex-wrap: nowrap; }
+        .btn { padding: 6px 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.75rem; transition: 0.3s; white-space: nowrap; }
+        .view-btn { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
+        .edit-btn { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+        .delete-btn { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+        /* تعديلات المودال للموبايل */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        .modal-content { background: white; margin: 10% auto; padding: 20px; border-radius: 20px; width: 95%; max-width: 450px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.2); max-height: 85vh; overflow-y: auto; }
+        
+        @media (max-width: 600px) {
+            .top-nav { flex-direction: column-reverse; align-items: stretch; }
+            .back-link { text-align: center; }
+            .filters { flex-wrap: wrap; }
+            select { flex-grow: 1; }
+        }
+
+        .save-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 0.9rem; }
+        .close { float: left; cursor: pointer; font-size: 1.5rem; color: #94a3b8; }
+        
+        .loading { text-align: center; padding: 30px; color: var(--primary); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>إدارة وحذف الدروس 📝</h2>
+
+    <div class="top-nav">
+        <div class="filters">
+            <select id="filterClass" onchange="loadLessons()">
+                <option value="all">كل الصفوف</option>
+                <option value="السابع">السابع</option><option value="الثامن">الثامن</option>
+                <option value="التاسع">التاسع</option><option value="العاشر">العاشر</option>
+            </select>
+            <select id="filterSubject" onchange="loadLessons()">
+                <option value="all">كل المواد</option>
+                <option value="الرياضيات">الرياضيات</option>
+                <option value="اللغة العربية">اللغة العربية</option>
+                <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+                <option value="الفيزياء">الفيزياء</option>
+                <option value="الكيمياء">الكيمياء</option>
+                <option value="الأحياء">الأحياء</option>
+                <option value="العلوم">العلوم</option>
+                <option value="التربية الإسلامية">التربية الإسلامية</option>
+                <option value="الاجتماعيات">الاجتماعيات</option>
+                <option value="التاريخ">التاريخ</option>
+                <option value="الجغرافيا">الجغرافيا</option>
+                <option value="علوم الحاسوب">علوم الحاسوب</option>
+                <option value="التربية المهنية">التربية المهنية</option>
+                <option value="اللغة الفرنسية">اللغة الفرنسية</option>
+                <option value="الثقافة المالية">الثقافة المالية</option>
+            </select>
+        </div>
+        <a href="lessons-hub.html" class="back-link">⬅ عودة للمركز</a>
+    </div>
+
+    <div id="loading" class="loading">جاري جلب البيانات... ⏳</div>
+    
+    <div class="table-container" id="tableContainer" style="display: none;">
+        <table>
+            <thead>
+                <tr>
+                    <th>اسم الدرس</th>
+                    <th>الصف</th>
+                    <th>المادة</th>
+                    <th>نوع المحتوى</th>
+                    <th>إجراءات الإدارة</th>
+                </tr>
+            </thead>
+            <tbody id="lessonsBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3 style="color: var(--primary); margin-top: 0;">تعديل بيانات الدرس</h3>
+        <input type="hidden" id="editId">
+        
+        <label>اسم الدرس:</label>
+        <input type="text" id="editName">
+
+        <label>الصف:</label>
+        <select id="editClass">
+            <option value="السابع">السابع</option><option value="الثامن">الثامن</option>
+            <option value="التاسع">التاسع</option><option value="العاشر">العاشر</option>
+        </select>
+
+        <label>المادة:</label>
+        <select id="editSubject">
+            <option value="الرياضيات">الرياضيات</option>
+            <option value="اللغة العربية">اللغة العربية</option>
+            <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+            <option value="الفيزياء">الفيزياء</option>
+            <option value="الكيمياء">الكيمياء</option>
+            <option value="الأحياء">الأحياء</option>
+            <option value="العلوم">العلوم</option>
+            <option value="التربية الإسلامية">التربية الإسلامية</option>
+            <option value="الاجتماعيات">الاجتماعيات</option>
+            <option value="التاريخ">التاريخ</option>
+            <option value="الجغرافيا">الجغرافيا</option>
+            <option value="علوم الحاسوب">علوم الحاسوب</option>
+            <option value="التربية المهنية">التربية المهنية</option>
+            <option value="اللغة الفرنسية">اللغة الفرنسية</option>
+            <option value="الثقافة المالية">الثقافة المالية</option>
+        </select>
+
+        <div id="editUrlDiv">
+            <label>الرابط (URL):</label>
+            <input type="url" id="editUrl">
+        </div>
+
+        <div id="editTextDiv">
+            <label>النص (Lesson_text):</label>
+            <textarea id="editText" rows="5"></textarea>
+        </div>
+        
+        <div id="editFileDiv" style="display:none;">
+            <label>تغيير الملف (اختياري):</label>
+            <input type="file" id="editFile">
+            <small style="color: #64748b;">اتركه فارغاً إذا لا تريد تغيير الملف الحالي</small>
+        </div>
+
+        <button class="save-btn" onclick="submitEdit()">حفظ التعديلات ✅</button>
+    </div>
+</div>
+
+<script>
+    // الجزء البرمجي (Supabase Logic) لم يتم لمسه لضمان الأمان
+    const S_URL = 'https://dkvywsnztqyxcflipldw.supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrdnl3c256dHF5eGNmbGlwbGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzg5MTksImV4cCI6MjA4OTkxNDkxOX0.0A31WY3QrAl_o376rJSZ9t9aYyWRbyjSMShq6vAOOdk';
+    const _supabase = supabase.createClient(S_URL, S_KEY);
+
+    async function loadLessons() {
+        const fClass = document.getElementById('filterClass').value;
+        const fSub = document.getElementById('filterSubject').value;
+        const body = document.getElementById('lessonsBody');
+        const loading = document.getElementById('loading');
+        const tableContainer = document.getElementById('tableContainer');
+
+        loading.style.display = 'block';
+        tableContainer.style.display = 'none';
+        body.innerHTML = "";
+
+        try {
+            let query = _supabase.from('lessons').select('*').order('id', { ascending: false });
+            if (fClass !== 'all') query = query.eq('class_name', fClass);
+            if (fSub !== 'all') query = query.eq('subject_name', fSub);
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            data.forEach(lesson => {
+                const typeIcon = lesson.content_type === 'url' ? '🔗 رابط' : (lesson.content_type === 'file' ? '📁 ملف' : '📄 نص');
+                
+                body.innerHTML += `
+                   <tr>
+                        <td><b>${lesson.name}</b></td>
+                        <td><span class="badge">${lesson.class_name}</span></td> 
+                        <td><span class="badge badge-subject">${lesson.subject_name}</span></td> 
+                        <td><span style="font-size:0.75rem; color:#64748b">${typeIcon}</span></td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn view-btn" onclick="goToView(${lesson.id})">👁️</button>
+                                <button class="btn edit-btn" onclick='openEdit(${JSON.stringify(lesson)})'>✏️</button>
+                               <button class="btn delete-btn" id="del-${lesson.id}" onclick="deleteLesson(${lesson.id})">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            loading.style.display = 'none';
+            tableContainer.style.display = 'block';
+        } catch (e) { alert(e.message); }
+    }
+
+    function goToView(id) {
+        window.location.href = `view-lesson.html?id=${id}&role=admin`;
+    }
+
+    function openEdit(lesson) {
+        document.getElementById('editId').value = lesson.id;
+        document.getElementById('editName').value = lesson.name;
+        document.getElementById('editClass').value = lesson.class_name;
+        document.getElementById('editSubject').value = lesson.subject_name;
+        document.getElementById('editUrl').value = lesson.url || "";
+        document.getElementById('editText').value = lesson.Lesson_text || "";
+
+        document.getElementById('editUrlDiv').style.display = lesson.content_type === 'url' ? 'block' : 'none';
+        document.getElementById('editTextDiv').style.display = lesson.content_type === 'text' ? 'block' : 'none';
+        document.getElementById('editFileDiv').style.display = lesson.content_type === 'file' ? 'block' : 'none';
+
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    async function submitEdit() {
+        const id = document.getElementById('editId').value;
+        const fileInput = document.getElementById('editFile');
+        const saveBtn = document.querySelector('.save-btn');
+        const originalText = saveBtn.innerText;
+        saveBtn.disabled = true;
+        saveBtn.innerText = "جاري الحفظ... ⏳";
+
+        let updates = {
+            name: document.getElementById('editName').value,
+            class_name: document.getElementById('editClass').value,
+            subject_name: document.getElementById('editSubject').value,
+            url: document.getElementById('editUrl').value,
+            Lesson_text: document.getElementById('editText').value
+        };
+
+        try {
+            if (fileInput.files.length > 0) {
+                const { data: oldData } = await _supabase.from('lessons').select('file_url').eq('id', id).single();
+                if (oldData && oldData.file_url) {
+                    const oldFileName = oldData.file_url.split('/').pop();
+                    await _supabase.storage.from('NewBucket').remove([oldFileName]);
+                }
+                const file = fileInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const newName = Date.now() + "." + fileExt;
+                const { error: uploadError } = await _supabase.storage.from('NewBucket').upload(newName, file);
+                if (uploadError) throw uploadError;
+                const { data: urlData } = _supabase.storage.from('NewBucket').getPublicUrl(newName);
+                updates.file_url = urlData.publicUrl;
+            }
+            const { error } = await _supabase.from('lessons').update(updates).eq('id', id);
+            if (error) throw error;
+            alert("تم التحديث بنجاح ✅");
+            closeModal();
+            loadLessons();
+        } catch (e) { alert("خطأ: " + e.message); } finally { saveBtn.disabled = false; saveBtn.innerText = originalText; }
+    }
+
+    async function deleteLesson(id) {
+        if (!confirm("⚠️ هل أنت متأكد من الحذف؟")) return;
+        const btn = document.getElementById(`del-${id}`);
+        const originalText = btn.innerHTML;
+        try {
+            btn.disabled = true;
+            btn.innerHTML = "⏳";
+            const { data: lesson, error: fetchError } = await _supabase.from('lessons').select('*').eq('id', id).single();
+            if (fetchError) throw fetchError;
+            if (lesson && lesson.content_type === 'file' && lesson.file_url) {
+                const fileName = lesson.file_url.split('/').pop();
+                await _supabase.storage.from('NewBucket').remove([fileName]);
+            }
+            const { error: deleteError } = await _supabase.from('lessons').delete().eq('id', id);
+            if (deleteError) throw deleteError;
+            alert("تم الحذف بنجاح ✅");
+            loadLessons();
+        } catch (e) {
+            alert("فشل الحذف: " + e.message);
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+    window.onclick = (e) => { if(e.target.className === 'modal') closeModal(); }
+    loadLessons();
+</script>
+</body>
+</html>
