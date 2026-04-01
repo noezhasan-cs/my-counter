@@ -230,21 +230,21 @@
         }
     }
 
-    function getYoutubeEmbedUrl(url) {
-        if (!url) return "";
-        let videoId = '';
-        if (url.includes('v=')) {
-            videoId = url.split('v=')[1].split('&')[0];
-        } else if (url.includes('youtu.be/')) {
-            videoId = url.split('youtu.be/')[1].split('?')[0];
-        } else if (url.includes('embed/')) {
-            return url; 
-        } else {
-            return url; 
-        }
-        return `https://www.youtube.com/embed/${videoId}`;
+   function getYoutubeEmbedUrl(url) {
+    if (!url) return "";
+    let videoId = '';
+    if (url.includes('v=')) {
+        videoId = url.split('v=')[1].split('&')[0];
+    } else if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1].split('?')[0];
+    } else if (url.includes('embed/')) {
+        return url; 
+    } else {
+        return url; 
     }
-
+    // استخدام youtube-nocookie لتقليل مشاكل الحظر في المتصفحات
+    return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`;
+}
     async function loadLesson() {
         const urlParams = new URLSearchParams(window.location.search);
         const lessonId = urlParams.get('id');
@@ -314,17 +314,31 @@
             }
 
             // 2. التعامل مع الملف المرفق (Lesson.file_url)
+           // 2. التعامل مع الملف المرفق (Lesson.file_url)
             if (lesson.file_url) {
                 const mediaContainer = document.getElementById('mediaContainer');
                 const fileUrl = lesson.file_url.toLowerCase();
                 mediaContainer.style.display = 'block';
 
                 if (fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+                    // عرض الصور
                     mediaContainer.innerHTML = `<img src="${lesson.file_url}" alt="درس مصور">`;
+                } else if (fileUrl.match(/\.(mp3|wav|ogg)$/)) {
+                    // --- إضافة مشغل صوتي ---
+                    mediaContainer.innerHTML = `
+                        <div style="padding:20px; background:#f1f5f9; border-radius:12px; text-align:center;">
+                            <p style="font-weight:bold; color:var(--primary); margin-bottom:10px;">🎵 استمع للمقطع الصوتي:</p>
+                            <audio controls style="width:100%;">
+                                <source src="${lesson.file_url}" type="audio/mpeg">
+                                متصفحك لا يدعم مشغل الصوت.
+                            </audio>
+                        </div>`;
                 } else if (fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be') || fileUrl.match(/\.(mp4|webm)$/)) {
+                    // عرض الفيديو
                     const embedUrl = getYoutubeEmbedUrl(lesson.file_url);
                     mediaContainer.innerHTML = `<iframe src="${embedUrl}" allowfullscreen></iframe>`;
                 } else {
+                    // ملفات أخرى (PDF وغيرها)
                     mediaContainer.innerHTML = `<div style="padding:20px; text-align:center; background:#f1f5f9;">📄 ملف مرفق <br><a href="${lesson.file_url}" target="_blank">اضغط للفتح</a></div>`;
                 }
             }
