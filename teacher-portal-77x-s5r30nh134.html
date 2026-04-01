@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الإدارة | المعلمة المبدعة</title>
+    <style>
+        :root {
+            --primary: #0284c7; /* نفس أزرق صفحة الطالبات للتناسق */
+            --bg: #ffffff;
+            --card-bg: #f8fafc;
+            --text-dark: #0f172a;
+            --border: #e2e8f0;
+            --accent: #f59e0b;
+        }
+
+        body { 
+            background: var(--bg); 
+            color: var(--text-dark); 
+            text-align: center; 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; /* لضمان التوسط في الموبايل */
+            min-height: 100vh;
+            padding: 20px 0; /* مساحة علوية وسفلية للموبايل */
+        }
+
+        /* زر الأدوات (الحقيبة) */
+        .tools-trigger { 
+            margin-bottom: 20px; /* يعطي مساحة تحت الزر في الموبايل */
+            font-size: 1.5rem; 
+            cursor: pointer; 
+            background: var(--card-bg); 
+            padding: 12px; 
+            border-radius: 50%; 
+            border: 1px solid var(--border); 
+            transition: 0.3s; 
+            z-index: 10; 
+        }
+        
+        /* في الشاشات الكبيرة يرجع لمكانه في الزاوية */
+        @media (min-width: 768px) {
+            .tools-trigger {
+                position: absolute; 
+                top: 25px; 
+                left: 25px;
+                margin-bottom: 0;
+            }
+        }
+
+        .tools-trigger:hover { transform: rotate(20deg); border-color: var(--primary); }
+
+        /* لوحة الأدوات المساعدة */
+        #toolsPanel { 
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: white; 
+            padding: 30px; 
+            border-radius: 25px; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1); 
+            z-index: 100; 
+            width: 280px; 
+        }
+        .close-btn { position: absolute; top: 10px; right: 15px; cursor: pointer; color: #ef4444; font-size: 1.2rem; }
+        .tool-btn { 
+            display: block; 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            background: var(--card-bg); 
+            color: var(--primary); 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            transition: 0.3s; 
+            box-sizing: border-box;
+        }
+        .tool-btn:hover { background: var(--primary); color: white; }
+
+        /* تعديل أحجام العناوين لتناسب الموبايل */
+        h1 { color: var(--text-dark); font-size: 2.5rem; margin: 10px 0 5px; font-weight: 800; padding: 0 10px; }
+        .subtitle { color: #64748b; margin-bottom: 35px; font-size: 1.1rem; padding: 0 15px; }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8rem; }
+            .subtitle { font-size: 1rem; }
+            .nav-card { width: 85% !important; }
+        }
+
+        .container { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 25px; 
+            padding: 20px; 
+            width: 100%;
+        }
+
+        /* الكروت الإدارية */
+        .nav-card { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border); 
+            border-radius: 25px; 
+            padding: 30px 20px; 
+            width: 220px; 
+            text-decoration: none; 
+            color: var(--text-dark); 
+            transition: 0.3s; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+            box-sizing: border-box;
+        }
+        .nav-card:hover { 
+            border-color: var(--primary); 
+            transform: translateY(-8px); 
+            background: white;
+            box-shadow: 0 15px 30px rgba(2, 132, 199, 0.08);
+        }
+
+        .icon { font-size: 3rem; display: block; margin-bottom: 15px; color: var(--primary); }
+        .title { color: var(--primary); font-weight: bold; font-size: 1.4rem; }
+        .desc { font-size: 0.85rem; color: #64748b; margin-top: 10px; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="tools-trigger" onclick="toggleTools()" title="ألعاب و الأدوات">🛠 🎮</div>
+
+    <div id="toolsPanel">
+        <h3 style="color: var(--primary); margin-top: 0;">⚡</h3>
+        <span class="close-btn" onclick="toggleTools()">✖</span>
+        <h3 style="color: var(--primary); margin-top: 0;">ألالعاب 🎮</h3>
+        <a href="counter.html" class="tool-btn">🔢  العداد الذكي</a>
+        <h3 style="color: var(--primary); margin-top: 0;">ألادوات ⚙️</h3>
+         <a href="calculator.html" class="tool-btn">🧮 الآلة الحاسبة</a>
+    </div>
+  
+    <h1>لوحة تحكم المعلمة 👩‍🏫</h1>
+    <p class="subtitle">أهلاً بكِ.. بوابتكِ لإدارة المحتوى التعليمي</p>
+
+    <div class="container">
+        <a href="lessons-hub.html" class="nav-card">
+            <span class="icon">⚙️</span>
+            <span class="title">إدارة الدروس</span>
+            <span class="desc">رفع الملفات، الروابط، والنصوص التعليمية.</span>
+        </a>
+
+        <a href="student-access-v99-k2p8z5.html?mode=teacher" class="nav-card">
+            <span class="icon">📖</span>
+            <span class="title">واجهة الطالبات</span>
+            <span class="desc">مشاهدة المنصة كما تظهر للطالبة.</span>
+        </a>
+    </div>
+
+    <script>
+        function toggleTools() {
+            const panel = document.getElementById('toolsPanel');
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+        
+        // حفظ دور المعلمة في المتصفح
+        sessionStorage.setItem('userRole', 'teacher');
+    </script>
+</body>
+</html>
