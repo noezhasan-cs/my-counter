@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | متعقب المواقع الذكي - حسن</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text);
+            margin: 0; padding: 10px;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        .header-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        h1 { margin-bottom: 1.5rem; color: var(--primary); font-size: 1.5rem; }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+            min-width: 0;
+        }
+
+        input:focus { border-color: var(--primary); }
+        input:disabled { background: #f1f5f9; cursor: not-allowed; }
+
+        button.main-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+
+        button.main-btn:hover { background: #1d4ed8; transform: translateY(-2px); }
+        button:disabled { background: #94a3b8 !important; transform: none !important; cursor: not-allowed; }
+
+        #log { margin-top: 15px; font-weight: 500; min-height: 24px; font-size: 0.9rem; }
+
+        .table-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 700px;
+        }
+
+        th { background: #f1f5f9; padding: 12px 15px; text-align: right; font-weight: 600; font-size: 14px; white-space: nowrap; }
+        td { padding: 12px 15px; border-top: 1px solid #f1f5f9; font-size: 14px; }
+
+        .actions { display: flex; gap: 5px; }
+        .action-btn {
+            border: none;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .btn-view { background: #dbeafe; color: var(--primary); }
+        .btn-edit { background: #fef3c7; color: var(--warning); }
+        .btn-delete { background: #fee2e2; color: var(--danger); }
+        
+        .action-btn:hover { opacity: 0.8; transform: scale(1.05); }
+
+        @media (max-width: 600px) {
+            body { padding: 5px; }
+            .header-card { padding: 1rem; border-radius: 15px; }
+            .input-group { flex-direction: column; }
+            input, button.main-btn { width: 100%; box-sizing: border-box; }
+            h1 { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-card">
+        <h1><i class="fas fa-map-marker-alt"></i> مركز تتبع المواقع الذكي</h1>
+        <div class="input-group">
+            <input type="text" id="placeName" placeholder="أدخل اسم المكان (إجباري)...">
+            <button id="btnSave" class="main-btn">
+                <i class="fas fa-plus"></i>
+                حفظ الموقع
+            </button>
+        </div>
+        <p id="log">جاهز للرصد..</p>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>المكان</th>
+                    <th>الإحداثيات</th>
+                    <th>التاريخ والوقت</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const S_URL = 'https://ligjsnvlyxdhvcngieem.supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpZ2pzbnZseXhkaHZjbmdpZWVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwODAzMjIsImV4cCI6MjA5MDY1NjMyMn0.Ui0NXCTIbYVVGTNNb-rBoTzSCzC-Si35rLT9NofE3hM';
+    const supabase = window.supabase.createClient(S_URL, S_KEY);
+    
+    const btnSave = document.getElementById('btnSave');
+    const placeInput = document.getElementById('placeName');
+    const log = document.getElementById('log');
+    const tableBody = document.getElementById('tableBody');
+
+    async function loadData() {
+        const { data, error } = await supabase.from('my_locations').select('*').order('created_at', { ascending: false });
+        if (error) return;
+        tableBody.innerHTML = data.map(item => `
+            <tr>
+                <td><strong>${item.place_name}</strong></td>
+                <td>${item.latitude.toFixed(5)}, ${item.longitude.toFixed(5)}</td>
+                <td>${new Date(item.created_at).toLocaleString('ar-EG')}</td>
+                <td>
+                    <div class="actions">
+                        <button class="action-btn btn-view" onclick="openMap(${item.latitude}, ${item.longitude})">
+                            <i class="fas fa-eye"></i> <span>عرض</span>
+                        </button>
+                        <button class="action-btn btn-edit" onclick="editPlace('${item.id}', '${item.place_name}')">
+                            <i class="fas fa-edit"></i> <span>تعديل</span>
+                        </button>
+                        <button class="action-btn btn-delete" onclick="deletePlace('${item.id}')">
+                            <i class="fas fa-trash"></i> <span>حذف</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    btnSave.onclick = () => {
+        const name = placeInput.value.trim();
+        
+        // منع الحفظ إذا كان الاسم فارغاً
+        if (!name) {
+            alert("لازم تكتب اسم للمكان أولاً!");
+            placeInput.focus();
+            return;
+        }
+
+        // قفل الواجهة أثناء المعالجة
+        btnSave.disabled = true;
+        placeInput.disabled = true;
+        log.style.color = "var(--primary)";
+        log.innerText = "⏳ جاري محاولة تحديد الموقع...";
+
+        const geoOptions = {
+            enableHighAccuracy: true,
+            timeout: 30000, // رفع المهلة لـ 30 ثانية
+            maximumAge: 0
+        };
+
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const { latitude, longitude, accuracy } = pos.coords;
+            log.innerText = `🎯 دقة: ${accuracy.toFixed(0)}م. جاري الحفظ...`;
+
+            const { error } = await supabase.from('my_locations').insert([{ 
+                place_name: name, latitude, longitude 
+            }]);
+
+            if (error) {
+                alert("خطأ في القاعدة: " + error.message);
+            } else {
+                log.style.color = "var(--success)";
+                log.innerText = "✅ تم الحفظ بنجاح!";
+                placeInput.value = "";
+                await loadData();
+            }
+            // فتح الواجهة
+            btnSave.disabled = false;
+            placeInput.disabled = false;
+
+        }, (err) => {
+            log.style.color = "var(--danger)";
+            log.innerText = "❌ فشل: " + err.message + ". جرب مرة أخرى.";
+            btnSave.disabled = false;
+            placeInput.disabled = false;
+        }, geoOptions);
+    };
+
+    async function deletePlace(id) {
+        if (!confirm("متأكد بدك تحذف الموقع؟")) return;
+        const { error } = await supabase.from('my_locations').delete().eq('id', id);
+        if (!error) loadData();
+    }
+
+    async function editPlace(id, oldName) {
+        const newName = prompt("تعديل اسم المكان:", oldName);
+        if (newName && newName !== oldName) {
+            const { error } = await supabase.from('my_locations').update({ place_name: newName }).eq('id', id);
+            if (!error) loadData();
+        }
+    }
+
+    function openMap(lat, lon) {
+        window.open(`https://www.google.com/maps?q=${lat},${lon}`, '_blank');
+    }
+
+    loadData();
+</script>
+</body>
+</html>
