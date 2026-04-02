@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>موثق المواقع الذكي</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f4f4f9; }
+        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background: #3ecf8e; color: white; border: none; border-radius: 8px; }
+        table { width: 80%; margin: 20px auto; border-collapse: collapse; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+    <h1>تتبع مواقعي 📍</h1>
+    <input type="text" id="placeName" placeholder="اسم المكان (اختياري)" style="padding:10px; margin-bottom:10px; width:250px;">
+    <br>
+    <button onclick="getLocation()">سجل موقعي الحالي</button>
+
+    <div id="status"></div>
+
+    <h2>الأماكن المسجلة</h2>
+    <table id="locationsTable">
+        <thead>
+            <tr>
+                <th>المكان</th>
+                <th>خط العرض</th>
+                <th>خط الطول</th>
+                <th>الوقت</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+        // إعداد الاتصال بـ Supabase
+        const SUPABASE_URL = 'https://ligjsnvlyxdhvcngieem.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpZ2pzbnZseXhkaHZjbmdpZWVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwODAzMjIsImV4cCI6MjA5MDY1NjMyMn0.Ui0NXCTIbYVVGTNNb-rBoTzSCzC-Si35rLT9NofE3hM';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // وظيفة تحديد الموقع
+        function getLocation() {
+            const status = document.getElementById('status');
+            const placeName = document.getElementById('placeName').value || 'مكان غير مسمى';
+
+            if (navigator.geolocation) {
+                status.innerText = "جاري تحديد موقعك...";
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    // إرسال البيانات لـ Supabase
+                    const { data, error } = await supabase
+                        .from('my_locations')
+                        .insert([{ place_name: placeName, latitude: lat, longitude: lon }]);
+
+                    if (error) {
+                        status.innerText = "خطأ في الحفظ: " + error.message;
+                    } else {
+                        status.innerText = "تم حفظ الموقع بنجاح!";
+                        fetchLocations(); // تحديث الجدول
+                    }
+                }, () => {
+                    status.innerText = "تعذر الوصول للموقع. تأكد من تفعيل الـ GPS.";
+                });
+            } else {
+                status.innerText = "متصفحك لا يدعم تحديد المواقع.";
+            }
+        }
+
+        // وظيفة جلب البيانات وعرضها في الجدول
+        async function fetchLocations() {
+            const { data, error } = await supabase
+                .from('my_locations')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (data) {
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
+                data.forEach(loc => {
+                    const row = `<tr>
+                        <td>${loc.place_name}</td>
+                        <td>${loc.latitude.toFixed(4)}</td>
+                        <td>${loc.longitude.toFixed(4)}</td>
+                        <td>${new Date(loc.created_at).toLocaleString('ar-EG')}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            }
+        }
+
+        // جلب البيانات عند فتح الصفحة
+        fetchLocations();
+    </script>
+</body>
+</html>
