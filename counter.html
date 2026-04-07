@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة العداد الذكية 🔢</title>
+    <style>
+        /* الألوان الجديدة: خلفية بيضاء ورمادي فاتح */
+        :root {
+            --primary: #0284c7;
+            --bg: #ffffff;
+            --card-bg: #f8fafc;
+            --text-main: #1e293b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body { 
+            background: var(--bg); 
+            color: var(--text-main); 
+            text-align: center; 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            height: 100vh; 
+        }
+        
+        /* الحاوية بنفس ترتيبك القديم لكن بألوان فاتحة */
+        .counter-container {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 30px;
+            display: inline-block;
+            margin: 0 auto;
+            border: 1px solid var(--border);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+        }
+
+        #number {
+            font-size: 8.5rem; /* كبرت الرقم قليلاً للوضوح */
+            font-weight: 800;
+            color: var(--primary);
+            margin: 20px 0;
+            transition: 0.2s ease;
+        }
+
+        .btns-row { display: flex; gap: 20px; justify-content: center; }
+
+        button.control {
+            padding: 15px 40px;
+            font-size: 2rem;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* الألوان التي طلبت الحفاظ عليها */
+        .inc { background: var(--success); }
+        .dec { background: var(--danger); }
+        
+        .reset { 
+            background: #94a3b8; 
+            color: white; 
+            font-size: 1rem; 
+            margin-top: 25px; 
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        button:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); opacity: 0.95; }
+        button:active { transform: translateY(1px); }
+
+        /* زر العودة الذكي في أقصى اليسار حسب طلبك السابق */
+        .back-nav {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+        }
+
+        .back-link {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: bold;
+            padding: 8px 15px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .back-link:hover { background: white; color: var(--primary); border-color: var(--primary); }
+             /* نوت: تصميم نافذة "المنطقة المحظورة" المرعبة */
+#blockingModal {
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0, 0, 0, 0.85); /* خلفية سوداء شفافة */
+    z-index: 99999; /* رقم عالي جداً ليكون فوق الغباش */
+    justify-content: center; 
+    align-items: center;
+    pointer-events: all; /* نوت: نضمن أن الكبس شغال هنا */
+}
+
+/* تأكد أن الـ body نفسه ليس عليه filter بشكل دائم */
+body {
+    transition: filter 0.3s;
+}
+.modal-content-dark {
+    background: #1a1a1a; 
+    padding: 50px 40px; 
+    border-radius: 30px; 
+    text-align: center; 
+    box-shadow: 0 30px 100px rgba(239, 68, 68, 0.2); 
+    width: 85%; max-width: 420px;
+    border: 2px solid #ef4444; 
+    border-style: dashed;
+}
+.modal-content-dark .warning-icon {
+    font-size: 6rem; color: #ef4444; margin-bottom: 25px;
+    animation: pulse 1.5s infinite;
+}
+.modal-content-dark h2 { color: #ef4444; margin-bottom: 15px; font-size: 2rem; font-weight: 900; }
+.modal-content-dark p { color: #f1f5f9; font-size: 1.1rem; margin-bottom: 30px; }
+.modal-content-dark button {
+    background: #ef4444; color: white; border: none; padding: 16px 30px; 
+    border-radius: 15px; cursor: pointer; width: 100%; font-weight: 800; font-size: 1.2rem;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+    </style>
+</head>
+<body>
+
+    <div class="counter-container">
+        <h2 style="color: #64748b; margin-top: 0; font-weight: 800;">العداد الرقمي</h2>
+        <div id="number">0</div>
+        
+        <div class="btns-row">
+            <button class="control dec" onclick="change(-1)">-</button>
+            <button class="control inc" onclick="change(1)">+</button>
+        </div>
+        
+        <button class="reset" onclick="reset()">إعادة ضبط</button>
+    </div>
+
+    <div class="back-nav" id="backNav"></div>
+ <div id="blockingModal">
+    <div class="modal-content-dark">
+        <div class="warning-icon">🚫</div>
+        <h2>تنبيه أمني محظور!</h2>
+        <p>تم اكتشاف محاولة وصول مباشر غير مصرح بها. المنطقة محمية ولا يمكن دخولها إلا عبر بوابة التحقق.</p>
+        <button onclick="window.location.href='teacher-portal-77x-s5r30nh134.html'">العودة لبوابة التحقق</button>
+    </div>
+</div>
+    <script>
+        let count = 0;
+        const numDisplay = document.getElementById('number');
+
+        function change(val) {
+            count += val;
+            numDisplay.innerText = count;
+            
+            // تغيير اللون ديناميكياً حسب القيمة
+            if (count > 0) {
+                numDisplay.style.color = '#10b981';
+            } else if (count < 0) {
+                numDisplay.style.color = '#ef4444';
+            } else {
+                numDisplay.style.color = '#0284c7';
+            }
+        }
+
+        function reset() {
+            count = 0;
+            numDisplay.innerText = count;
+            numDisplay.style.color = '#0284c7';
+        }
+
+        // --- التعديل الذكي لزر العودة لليسار ---
+        const backNav = document.getElementById('backNav');
+        const role = sessionStorage.getItem('userRole');
+
+        if (role === 'teacher') {
+            backNav.innerHTML = `<a href="teacher-portal-77x-s5r30nh134.html" class="back-link">⬅ العودة للوحة الإدارة</a>`;
+        } else {
+            backNav.innerHTML = `<a href="student-access-v99-k2p8z5.html" class="back-link">⬅ العودة لصفحة الطالبات</a>`;
+        }
+        window.onload = function() {
+    const hasAccess = sessionStorage.getItem('adminAccess');
+    
+    if (hasAccess !== 'true') {
+        // نوت: أظهر النافذة أولاً
+        document.getElementById('blockingModal').style.display = 'flex';
+        
+        // نوت: بدلاً من تغبيش body، غبّش الحاوية التي تحتوي على الكروت والعناوين فقط
+        // سنفترض أن محتوى صفحتك داخل "div" أو سنستهدف العناصر مباشرة
+        const elementsToBlur = document.querySelectorAll('.back-nav, h1, .hub-container');
+        elementsToBlur.forEach(el => {
+            el.style.filter = "blur(10px)";
+            el.style.pointerEvents = "none"; // منع الكبس على ما خلف النافذة
+        });
+    }
+};
+    </script>
+</body>
+</html>
