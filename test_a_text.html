@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استطلاع رأي المستخدمين</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f0f2f5; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .card { 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 15px; 
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1); 
+            width: 90%; 
+            max-width: 450px; 
+            text-align: center; 
+        }
+        h2 { color: #1c1e21; font-size: 1.3rem; margin-bottom: 1.5rem; line-height: 1.4; }
+        textarea { 
+            width: 100%; 
+            height: 150px; 
+            padding: 15px; 
+            border: 1px solid #dddfe2; 
+            border-radius: 10px; 
+            resize: none; 
+            font-size: 1rem; 
+            box-sizing: border-box;
+            background-color: #f5f6f7;
+        }
+        button { 
+            background-color: #0866ff; 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1.1rem; 
+            font-weight: bold;
+            margin-top: 1rem; 
+            width: 100%; 
+            transition: background 0.2s; 
+        }
+        button:hover { background-color: #0055d4; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>ماذا تتمنى أو تحتاج أن يكون في هاتفك من تطبيقات؟</h2>
+    <textarea id="userComment" placeholder="اكتب فكرتك هنا... نحن نهتم برأيك!"></textarea>
+    <button onclick="sendData()" id="sendBtn">إرسال الفكرة</button>
+</div>
+
+<script>
+    // 1. بداية عداد الوقت (خفي)
+    const startTime = Date.now();
+
+    // 2. بيانات الاتصال بـ Supabase
+    const S_URL = 'https://dkvywsnztqyxcflipldw.supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrdnl3c256dHF5eGNmbGlwbGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzg5MTksImV4cCI6MjA4OTkxNDkxOX0.0A31WY3QrAl_o376rJSZ9t9aYyWRbyjSMShq6vAOOdk';
+    
+    // إنشاء عميل Supabase
+    const supabaseClient = supabase.createClient(S_URL, S_KEY);
+
+    async function sendData() {
+        const btn = document.getElementById('sendBtn');
+        const comment = document.getElementById('userComment').value.trim();
+        
+        if (!comment) {
+            alert("يرجى كتابة فكرة قبل الإرسال!");
+            return;
+        }
+
+        // تعطيل الزر لمنع تكرار الإرسال
+        btn.disabled = true;
+        btn.innerText = "جاري الحفظ...";
+
+        // حساب الوقت المستغرق بالثواني
+        const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+
+        // جلب معلومات المتصفح والجهاز
+        const deviceData = navigator.userAgent;
+
+        try {
+            // إرسال البيانات للجدول
+            const { data, error } = await supabaseClient
+                .from('user_feedback')
+                .insert([
+                    { 
+                        comment: comment, 
+                        time_spent: timeSpent, 
+                        device_info: deviceData 
+                    }
+                ]);
+
+            if (error) throw error;
+
+            alert("رائع! تم استلام فكرتك بنجاح.");
+            document.getElementById('userComment').value = ""; // تفريغ الخانة بعد الإرسال
+        } catch (err) {
+            console.error("Error:", err.message);
+            alert("عذراً، حدث خطأ أثناء الإرسال. حاول مرة أخرى.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "إرسال الفكرة";
+        }
+    }
+</script>
+
+</body>
+</html>
