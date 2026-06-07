@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Computing Project - Independent Control</title>
+    <style>
+        /* استدعاء خط قوقل الفخم "Cairo" */
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --accent2: #9b59b6;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --bg: #f8f9fa;
+        }
+        body {
+            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .student-card {
+            background: linear-gradient(135deg, var(--primary), #34495e);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        .student-card h1 { margin: 0 0 10px 0; font-size: 26px; }
+        .student-card p { margin: 5px 0; font-size: 17px; opacity: 0.9; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .control-group {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            background: #fff;
+        }
+        .btn-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        button {
+            font-family: 'Cairo', sans-serif;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+        }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        .m1-btn { background-color: var(--accent); }
+        .m2-btn { background-color: var(--accent2); }
+        button.stop-btn { background-color: var(--danger); }
+        
+        input[type=range] {
+            width: 90%;
+            margin: 15px 0 5px 0;
+            cursor: pointer;
+        }
+        .speed-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: #555;
+            margin: 0;
+        }
+
+        .status-box {
+            font-size: 22px;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            background-color: #eee;
+        }
+        .safe { background-color: var(--success); color: white; }
+        .danger { background-color: var(--danger); color: white; }
+        
+        .badge {
+            display: inline-block;
+            background-color: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="student-card">
+        <h1>مشروع الحوسبة السحابية (PaaS Dashboard)</h1>
+        <p><strong>الاسم:</strong> حسن محمد حسن فوالجه</p>
+        <p><strong>الرقم الجامعي:</strong> 202310096</p>
+        <p><strong>التخصص:</strong> علم الحاسوب</p>
+        <p><strong>الجامعة:</strong> جامعة جدارا</p>
+        <span class="badge">Independent Dual-Motor Firebase SDK Control</span>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>لوحة التحكم المستقلة بالمحركات</h2>
+            <p style="color: #666; font-size: 14px;">التحكم اللحظي باتجاه وسرعة كل محرك بشكل منفصل عبر السلايدر:</p>
+            
+            <div class="control-group">
+                <h3 style="margin-top:0; color: var(--accent);">المحرك الأول (Motor 1)</h3>
+                <div class="btn-group">
+                    <button class="m1-btn" onclick="setMotor1Direction('left')">⬅ يسار</button>
+                    <button class="stop-btn" onclick="setMotor1Direction('stop')">⏹ إيقاف</button>
+                    <button class="m1-btn" onclick="setMotor1Direction('right')">يمين ➡</button>
+                </div>
+                <h4 style="margin: 15px 0 0 0;">التحكم بالسرعة (Motor 1 Speed)</h4>
+                <input type="range" min="0" max="255" value="0" oninput="updateMotor1Speed(this.value)">
+                <p class="speed-text" id="speed1Text">0</p>
+            </div>
+
+            <div class="control-group">
+                <h3 style="margin-top:0; color: var(--accent2);">المحرك الثاني (Motor 2)</h3>
+                <div class="btn-group">
+                    <button class="m2-btn" onclick="setMotor2Direction('forward')">⬆ أمام</button>
+                    <button class="stop-btn" onclick="setMotor2Direction('stop')">⏹ إيقاف</button>
+                    <button class="m2-btn" onclick="setMotor2Direction('backward')">خلف ⬇</button>
+                </div>
+                <h4 style="margin: 15px 0 0 0;">التحكم بالسرعة (Motor 2 Speed)</h4>
+                <input type="range" min="0" max="255" value="0" oninput="updateMotor2Speed(this.value)">
+                <p class="speed-text" id="speed2Text">0</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>مراقبة بيئة المختبر السحابية</h2>
+            <p>البيانات الحالية المرفوعة من كرت الـ ESP32 اللحظية:</p>
+            <div style="font-size: 20px; margin-top: 30px;">مستوى الغاز الحالي:</div>
+            <h1 id="gasValue" style="font-size: 50px; margin: 10px 0; color: var(--primary);">0</h1>
+            <div id="danger" class="status-box">بانتظار البيانات...</div>
+        </div>
+    </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDAgAK7PwlBkizQ5CCAbGqfgsaDqFLiX2s",
+  authDomain: "esp32-new-control.firebaseapp.com",
+  databaseURL: "https://esp32-new-control-default-rtdb.firebaseio.com",
+  projectId: "esp32-new-control",
+  storageBucket: "esp32-new-control.firebasestorage.app",
+  messagingSenderId: "325766279015",
+  appId: "1:325766279015:web:eb98abac2595f618c6c9c2",
+  measurementId: "G-RG1PDT062L"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// --- وظائف المحرك الأول (Motor 1) ---
+window.setMotor1Direction = function(direction){
+    set(ref(db, "motors/motor1/direction"), direction);
+}
+
+window.updateMotor1Speed = function(speed){
+    document.getElementById("speed1Text").innerText = speed;
+    set(ref(db, "motors/motor1/speed"), parseInt(speed));
+}
+
+// --- وظائف المحرك الثاني (Motor 2) ---
+window.setMotor2Direction = function(direction){
+    set(ref(db, "motors/motor2/direction"), direction);
+}
+
+window.updateMotor2Speed = function(speed){
+    document.getElementById("speed2Text").innerText = speed;
+    set(ref(db, "motors/motor2/speed"), parseInt(speed));
+}
+
+// --- الاستماع اللحظي لقراءات الحساس والإنذار ---
+onValue(ref(db, "system/gas_level"), (snapshot) => {
+    document.getElementById("gasValue").innerText = snapshot.val() || 0;
+});
+
+onValue(ref(db, "system/is_danger"), (snapshot) => {
+    let danger = snapshot.val();
+    const dangerDiv = document.getElementById("danger");
+    if(danger) {
+        dangerDiv.innerHTML = "⚠️ خطر! تسريب غاز مكتشف";
+        dangerDiv.className = "status-box danger";
+    } else {
+        dangerDiv.innerHTML = "✅ النظام آمن ومستقر";
+        dangerDiv.className = "status-box safe";
+    }
+});
+</script>
+
+</body>
+</html>
